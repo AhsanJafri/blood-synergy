@@ -1,0 +1,31 @@
+# Android-focused Docker workflow (same result on any Linux/x86_64 or arm64 host with Docker).
+#
+# Build image (includes debug APK under /app/build/...):
+#   docker compose build
+#
+# Copy APK to current directory:
+#   id=$(docker create bloodsynergy-app) && docker cp "$id":/app/build/app/outputs/flutter-apk/app-debug.apk ./app-debug.apk && docker rm -v "$id"
+#
+# Dev shell with repo bind-mounted (Flutter SDK from image):
+#   docker compose run --rm dev
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bloodsynergy-app
+
+  dev:
+    image: bloodsynergy-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+    command: ["bash", "-lc", "flutter pub get && exec bash"]
+    profiles:
+      - dev

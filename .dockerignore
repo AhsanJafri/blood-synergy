@@ -1,0 +1,23 @@
+.git
+.gitignore
+**/.DS_Store
+**/build
+**/.dart_tool
+**/doc/api
+**/*.iml
+.idea
+.vscode
+
+# iOS — not used in Linux container; speeds up context
+ios/Pods
+ios/.symlinks
+ios/Flutter/Flutter.podspec
+ios/Runner.xcworkspace/xcuserdata
+ios/Runner.xcodeproj/xcuserdata
+
+# Android local caches
+android/.gradle
+android/app/build
+android/local.properties
+
+# Keep android/ and ios/ project files for `flutter build` metadata
