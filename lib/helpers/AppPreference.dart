@@ -26,8 +26,16 @@ class UserPref {
     prefs.setString('authToken', str);
   }
 
+  static void persistWebUserToken(String str) async {
+    prefs.setString('webAuthToken', str);
+  }
+
   static Future<String?> getUserToken() async {
     return prefs.getString('authToken');
+  }
+
+  static Future<String?> getWebUserToken() async {
+    return prefs.getString('webAuthToken');
   }
 
   static Future<bool> isLogin() async {
@@ -48,6 +56,7 @@ class UserPref {
   static Future<void> clearPrefs() async {
     prefs.remove("user");
     prefs.remove("authToken");
+    prefs.remove("webAuthToken");
   }
 
   static Future<CurrentUser> retrieveUserDate() async {

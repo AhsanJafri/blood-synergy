@@ -20,6 +20,57 @@ class AuthenticationRepository {
 
   AuthenticationRepository(this._networkClient);
 
+  FormData _cloneFormData(FormData source) {
+    return FormData.fromMap({
+      for (final field in source.fields) field.key: field.value,
+      for (final file in source.files) file.key: file.value,
+    });
+  }
+
+  String? _extractWebAuthToken(dynamic data) {
+    Map<String, dynamic>? json;
+    if (data is Map<String, dynamic>) {
+      json = data;
+    } else if (data is Map) {
+      json = Map<String, dynamic>.from(data);
+    } else if (data is String) {
+      try {
+        final decoded = jsonDecode(data);
+        if (decoded is Map<String, dynamic>) {
+          json = decoded;
+        } else if (decoded is Map) {
+          json = Map<String, dynamic>.from(decoded);
+        }
+      } catch (_) {}
+    }
+    if (json == null || json['success'] != true) return null;
+
+    return json['auth_token']?.toString() ??
+        json['token']?.toString() ??
+        json['webAuthToken']?.toString() ??
+        json['access_token']?.toString();
+  }
+
+  Future<void> _syncWebAuth({
+    required FormData formData,
+    required String mainPath,
+  }) async {
+    try {
+      final response = await _networkClient.dioMainApiRequest(
+        path: mainPath,
+        parameter: _cloneFormData(formData),
+      );
+      print('Web auth response: ${response.data}');
+      final webToken = _extractWebAuthToken(response.data);
+      if (webToken != null && webToken.isNotEmpty) {
+        print("Web Token: $webToken");
+        UserPref.persistWebUserToken(webToken);
+      }
+    } catch (e) {
+      print('Web auth sync failed: $e');
+    }
+  }
+
   Future<AppResultState<String>> login(
       String phoneEmail, String password) async {
     try {
@@ -38,25 +89,37 @@ class AuthenticationRepository {
       final decodedResponse = BaseResponse.fromJson(jsonEncode(_response.data));
       if (decodedResponse.status == 200) {
         if (decodedResponse.token != null) {
-          // Do additional processing if needed
           String jsonString = jsonEncode(decodedResponse.jsonData);
           UserPref.persistUserToken(decodedResponse.token ?? '');
           UserPref.persistUserData(jsonString);
           Constants.token =
               await UserPref.getUserToken() ?? decodedResponse.token ?? '';
+
+          final webFormFields = {
+            for (final field in data.fields) field.key: field.value,
+          };
+          final email = decodedResponse.jsonData?['email']?.toString();
+          if (email != null && email.isNotEmpty) {
+            webFormFields['email'] = email;
+          }
+          await _syncWebAuth(
+            formData: FormData.fromMap(webFormFields),
+            mainPath: NetworkEndPoints.mainLogin,
+          );
+
           return AppResultState.success(decodedResponse.message);
         } else {
           return AppResultState.error(decodedResponse.message);
         }
       } else {
-        // Return an error state with a Failure object
         return AppResultState.error(decodedResponse.message);
       }
     } catch (error) {
       return AppResultState.error(error.toString());
     }
   }
-    Future<AppResultState<String>> logout() async {
+
+  Future<AppResultState<String>> logout() async {
     try {
       final _response = await _networkClient.dioRequest(
           requestType: RequestType.POST,
@@ -151,19 +214,23 @@ class AuthenticationRepository {
       final decodedResponse = BaseResponse.fromJson(jsonEncode(_response.data));
       if (decodedResponse.status == 200) {
         if (decodedResponse.token != null) {
-          // Do additional processing if needed
           String jsonString = jsonEncode(decodedResponse.jsonData);
           UserPref.persistUserToken(decodedResponse.token ?? '');
           await AppStateManagerState.shared.getUserData();
           UserPref.persistUserData(jsonString);
           Constants.token =
               await UserPref.getUserToken() ?? decodedResponse.token ?? '';
+
+          await _syncWebAuth(
+            formData: formData,
+            mainPath: NetworkEndPoints.mainRegister,
+          );
+
           return AppResultState.success(decodedResponse.message);
         } else {
           return AppResultState.error(decodedResponse.message);
         }
       } else {
-        // Return an error state with a Failure object
         return AppResultState.error(decodedResponse.message);
       }
     } catch (error) {

@@ -6,6 +6,14 @@ class ServerSettings {
       "https://bloodsynergybackend.trangotech.dev/";
 
   static const String mainBaseURL = "https://web.blood-synergy.com";
+
+  static String mainApiUrl(String path) {
+    final base = mainBaseURL.endsWith('/')
+        ? mainBaseURL.substring(0, mainBaseURL.length - 1)
+        : mainBaseURL;
+    final normalizedPath = path.startsWith('/') ? path.substring(1) : path;
+    return '$base/$normalizedPath';
+  }
   //dev socket
   static const socketURL = "http://31.186.241.24:3016/";
   //Dev Image Url

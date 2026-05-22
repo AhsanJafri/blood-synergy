@@ -103,7 +103,25 @@ class NetworkClient {
                   "contentType": 'multipart/form-data',
                 },
         ));
-    //}
+  }
+
+  Future<Dio.Response> dioMainApiRequest({
+    required String path,
+    dynamic parameter = Nothing,
+  }) async {
+    final url = ServerSettings.mainApiUrl(path);
+    print("'$url'");
+    return dio.post(
+      url,
+      data: parameter,
+      options: Dio.Options(
+        followRedirects: false,
+        validateStatus: (status) => true,
+        headers: {
+          "contentType": 'multipart/form-data',
+        },
+      ),
+    );
   }
 }
 
