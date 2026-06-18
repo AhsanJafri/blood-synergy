@@ -121,7 +121,8 @@ class AppNavigator {
         ),
       );
     } else {
-      Navigator.pushAndRemoveUntil(
+      // Use push instead of pushAndRemoveUntil to keep cubit alive
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => BlocProvider.value(
@@ -129,7 +130,6 @@ class AppNavigator {
             child: otpVerificationScreen(phone, forgotPassword),
           ),
         ),
-        (route) => false,
       );
     }
   }

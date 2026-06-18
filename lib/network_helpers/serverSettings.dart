@@ -1,11 +1,9 @@
-class ServerSettings {
-  //dev url
-  static const String baseURL =
-      "https://bloodsynergybackend.trangotech.dev/api/";
-  static const String uploadBaseURL =
-      "https://bloodsynergybackend.trangotech.dev/";
+import 'package:blood_synergy_app/helpers/env_config.dart';
 
-  static const String mainBaseURL = "https://web.blood-synergy.com";
+class ServerSettings {
+  static String get baseURL => EnvConfig.baseUrl;
+  static String get uploadBaseURL => EnvConfig.uploadBaseUrl;
+  static String get mainBaseURL => EnvConfig.mainBaseUrl;
 
   static String mainApiUrl(String path) {
     final base = mainBaseURL.endsWith('/')
@@ -14,10 +12,8 @@ class ServerSettings {
     final normalizedPath = path.startsWith('/') ? path.substring(1) : path;
     return '$base/$normalizedPath';
   }
-  //dev socket
-  static const socketURL = "http://31.186.241.24:3016/";
-  //Dev Image Url
-  static const IMAGE_URL = "https://netubiebackend.trangotech.dev/";
+  static String get socketURL => EnvConfig.socketUrl;
+  static String get IMAGE_URL => EnvConfig.imageUrl;
 
   static var headers = {
     //"Content-Type": "application/x-www-form-urlencoded",

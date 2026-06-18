@@ -31,4 +31,17 @@ class SignupRequest {
       'fcm_token': fcmToken,
     };
   }
+
+  factory SignupRequest.fromJson(Map<String, dynamic> json) {
+    return SignupRequest(
+      email: json['email'] as String?,
+      firstName: json['first_name'] as String?,
+      lastName: json['last_name'] as String?,
+      phone: json['phone'] as String?,
+      password: json['password'] as String?,
+      deviceId: json['device_id'] as String?,
+      deviceType: json['device_type'] as String?,
+      fcmToken: json['fcm_token'] as String?,
+    );
+  }
 }

@@ -196,6 +196,7 @@ class AuthenticationRepository {
 
   Future<AppResultState<String>> signup(SignupRequest signupData) async {
     try {
+      print('DEBUG: Starting signup...');
       final FormData formData = FormData.fromMap({
         'email': signupData.email,
         'first_name': signupData.firstName,
@@ -206,14 +207,18 @@ class AuthenticationRepository {
         'device_type': 'iPhone',
         'fcm_token': '09876ftyvghbhjnkoi8978g67t'
       });
+      print('DEBUG: Calling register API...');
       final _response = await _networkClient.dioRequest(
           requestType: RequestType.POST,
           path: NetworkEndPoints.register,
           headerWithAuth: false,
           parameter: formData);
+      print('DEBUG: Got response: ${_response.data}');
       final decodedResponse = BaseResponse.fromJson(jsonEncode(_response.data));
+      print('DEBUG: Decoded response status: ${decodedResponse.status}');
       if (decodedResponse.status == 200) {
         if (decodedResponse.token != null) {
+          print('DEBUG: Token received, saving user data...');
           String jsonString = jsonEncode(decodedResponse.jsonData);
           UserPref.persistUserToken(decodedResponse.token ?? '');
           await AppStateManagerState.shared.getUserData();
@@ -221,19 +226,25 @@ class AuthenticationRepository {
           Constants.token =
               await UserPref.getUserToken() ?? decodedResponse.token ?? '';
 
-          await _syncWebAuth(
+          print('DEBUG: Starting web auth sync (non-blocking)...');
+          // Don't await - run in background so it doesn't block signup
+          _syncWebAuth(
             formData: formData,
             mainPath: NetworkEndPoints.mainRegister,
           );
 
+          print('DEBUG: Signup successful!');
           return AppResultState.success(decodedResponse.message);
         } else {
-          return AppResultState.error(decodedResponse.message);
+          print('DEBUG: No token in response');
+          return AppResultState.error(decodedResponse.message ?? 'Registration failed');
         }
       } else {
-        return AppResultState.error(decodedResponse.message);
+        print('DEBUG: Non-200 status: ${decodedResponse.status}');
+        return AppResultState.error(decodedResponse.message ?? 'Registration failed');
       }
     } catch (error) {
+      print('DEBUG: Signup error: $error');
       return AppResultState.error(error.toString());
     }
   }

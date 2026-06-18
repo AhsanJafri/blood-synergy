@@ -50,17 +50,20 @@ class _signUpScreenState extends State<signUpScreen>
 
   void _signUp() {
     final signupCubit = BlocProvider.of<SignupCubit>(context);
-
-    // Create a SignupRequestModel using the data from your controllers
-    // AppNavigator.navigateToOTP(context);
+    if (!_isChecked) {
+      AppLoader.showSnackbar(
+          context, 'Please accept Terms & Conditions and Privacy Policy', false);
+      return;
+    }
     if (signupCubit.shouldCallApi) {
-      signupCubit.performSignup(
-          email: _emailController.text,
-          firstName: _firstNameController.text,
-          lastName: _lastNameController.text,
-          password: _passwordController.text,
-          confirmPassword: _confirmPasswordController.text,
-          phone: countryPhoneCode + _phoneCodeController.text);
+      signupCubit.prepareSignupAndSendOtp(
+        email: _emailController.text.trim(),
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        password: _passwordController.text,
+        confirmPassword: _confirmPasswordController.text,
+        phone: countryPhoneCode + _phoneCodeController.text.trim(),
+      );
     }
   }
 
@@ -76,9 +79,13 @@ class _signUpScreenState extends State<signUpScreen>
               EasyLoading.show(
                   status: ((state.signupResult as LoadingState).msg));
             } else if (state.signupResult is RespSuccessState) {
+              final phone = countryPhoneCode + _phoneCodeController.text.trim();
               AppNavigator.navigateToOTP(
-                  context, countryPhoneCode + _phoneCodeController.text, false);
-              print(state);
+                context,
+                phone,
+                false,
+                signupCubit: BlocProvider.of<SignupCubit>(context),
+              );
             } else if (state.signupResult is RespErrorState) {
               // Handle error state, e.g., show an error message
               AppLoader.showSnackbar(

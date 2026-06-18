@@ -2,81 +2,168 @@ import 'package:bloc/bloc.dart';
 import 'package:blood_synergy_app/Models/SignupReqModel.dart';
 import 'package:blood_synergy_app/Repositories/AuthenticationRepository.dart';
 import 'package:blood_synergy_app/helpers/app_result_state.dart';
+import 'package:blood_synergy_app/helpers/env_config.dart';
+import 'package:blood_synergy_app/helpers/pending_signup_storage.dart';
 import 'package:blood_synergy_app/helpers/validator.dart';
+import 'package:blood_synergy_app/services/twilio_otp_service.dart';
 import 'package:meta/meta.dart';
 
 part 'signup_state.dart';
 
 class SignupCubit extends Cubit<SignupState> {
   AuthenticationRepository repo;
+  final TwilioOtpService _twilioOtpService = TwilioOtpService();
+
   SignupCubit(this.repo) : super(SignupState(null));
   bool shouldCallApi = true;
-  Future<void> performSignup(
-      {String? email,
-      String? firstName,
-      String? lastName,
-      String? phone,
-      String? password,
-      String? confirmPassword}) async {
+
+  void _safeEmit(SignupState state) {
+    if (!isClosed) {
+      print('DEBUG CUBIT: Emitting state: ${state.signupResult?.runtimeType}');
+      emit(state);
+    } else {
+      print('DEBUG CUBIT: Cubit is closed, cannot emit');
+    }
+  }
+
+  /// Validates form, saves signup data locally, sends Twilio OTP (no API signup yet).
+  Future<void> prepareSignupAndSendOtp({
+    String? email,
+    String? firstName,
+    String? lastName,
+    String? phone,
+    String? password,
+    String? confirmPassword,
+  }) async {
     shouldCallApi = false;
 
     try {
-      // Perform field validation
-      String? validationError = validateFields(
-          email: email,
-          firstName: firstName,
-          lastName: lastName,
-          phone: phone,
-          password: password,
-          confirmPassword: confirmPassword);
-
-      if (validationError != null) {
-        emit(SignupState(AppResultState.error(validationError)));
-        return;
-      }
-
-      emit(SignupState(
-          AppResultState.loading('Please wait while we register you...')));
-
-      // Continue with the signup logic...
-      SignupRequest signupData = SignupRequest(
+      final validationError = validateFields(
         email: email,
         firstName: firstName,
         lastName: lastName,
         phone: phone,
         password: password,
-        deviceId: '987675rdtcfvghbhn7867',
-        deviceType: 'iPhone',
-        fcmToken: '09876ftyvghbhjnkoi8978g67t',
+        confirmPassword: confirmPassword,
       );
 
-      AppResultState<String> _response = await repo.signup(signupData);
+      if (validationError != null) {
+        _safeEmit(SignupState(AppResultState.error(validationError)));
+        return;
+      }
 
-      emit(SignupState(_response));
+      _safeEmit(SignupState(
+          AppResultState.loading('Saving your details and sending OTP...')));
+
+      final signupData = SignupRequest(
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
+        password: password,
+        deviceId: EnvConfig.deviceId,
+        deviceType: EnvConfig.deviceType,
+        fcmToken: EnvConfig.fcmToken,
+      );
+
+      await PendingSignupStorage.savePendingSignup(signupData);
+
+      final otpResult = await _twilioOtpService.sendOtp(phone!);
+      _safeEmit(SignupState(otpResult));
     } catch (error) {
-      // Handle other errors (not related to signup result)
-      emit(SignupState(AppResultState.error(error.toString())));
+      _safeEmit(SignupState(AppResultState.error(error.toString())));
     } finally {
       shouldCallApi = true;
     }
   }
 
-  // void resentOTP() {
-  //   print("Resend OTP");
-  // }
-  Future<void> resentOTP() async {
+  /// Resend Twilio OTP during signup (after 2-minute window).
+  Future<void> resendTwilioOtp(String phone) async {
     shouldCallApi = false;
-    emit(SignupState(AppResultState.loading('Resending OTP...')));
+    _safeEmit(SignupState(AppResultState.loading('Resending verification code...')));
 
     try {
-      // Perform field validation
+      final pending = await PendingSignupStorage.loadPendingSignup();
+      if (pending == null) {
+        _safeEmit(SignupState(AppResultState.error(
+            'Signup session expired. Please go back and try again.')));
+        return;
+      }
 
-      AppResultState<String> _response = await repo.reSendOTP();
-
-      emit(SignupState(_response));
+      final otpResult = await _twilioOtpService.sendOtp(phone);
+      _safeEmit(SignupState(otpResult));
     } catch (error) {
-      // Handle other errors (not related to signup result)
-      emit(SignupState(AppResultState.error(error.toString())));
+      _safeEmit(SignupState(AppResultState.error(error.toString())));
+    } finally {
+      shouldCallApi = true;
+    }
+  }
+
+  /// Verify Twilio OTP locally, then call signup API.
+  Future<void> verifyTwilioOtpAndRegister(String? code) async {
+    if (code == null || code.isEmpty) {
+      _safeEmit(SignupState(AppResultState.error('Please enter the verification code')));
+      return;
+    }
+
+    shouldCallApi = false;
+    try {
+      if (PendingSignupStorage.isOtpExpired()) {
+        _safeEmit(SignupState(AppResultState.error(
+            'Verification code expired. Tap Resend to get a new code.')));
+        return;
+      }
+
+      if (!PendingSignupStorage.verifyOtp(code)) {
+        _safeEmit(SignupState(
+            AppResultState.error('Invalid verification code. Please try again.')));
+        return;
+      }
+
+      final pending = await PendingSignupStorage.loadPendingSignup();
+      if (pending == null) {
+        _safeEmit(SignupState(AppResultState.error(
+            'Signup session expired. Please go back and try again.')));
+        return;
+      }
+
+      _safeEmit(SignupState(
+          AppResultState.loading('Verified! Creating your account...')));
+
+      final response = await repo.signup(pending);
+      print('DEBUG CUBIT: Got response type: ${response.runtimeType}');
+      
+      if (response is RespErrorState<String>) {
+        print('DEBUG CUBIT: Error response - ${response.failure?.errorMessage}');
+        _safeEmit(SignupState(response));
+      } else if (response is RespSuccessState<String>) {
+        print('DEBUG CUBIT: Success response');
+        await PendingSignupStorage.clear();
+        _safeEmit(SignupState(AppResultState.successNavigate(
+            response.value ?? 'Account created successfully')));
+      } else {
+        print('DEBUG CUBIT: Unknown response type, treating as success');
+        await PendingSignupStorage.clear();
+        _safeEmit(SignupState(AppResultState.successNavigate(
+            'Account created successfully')));
+      }
+    } catch (error) {
+      await PendingSignupStorage.clear();
+      _safeEmit(SignupState(AppResultState.error(error.toString())));
+    } finally {
+      shouldCallApi = true;
+    }
+  }
+
+  Future<void> resentOTP() async {
+    shouldCallApi = false;
+    _safeEmit(SignupState(AppResultState.loading('Resending OTP...')));
+
+    try {
+      final response = await repo.reSendOTP();
+      _safeEmit(SignupState(response));
+    } catch (error) {
+      _safeEmit(SignupState(AppResultState.error(error.toString())));
     } finally {
       shouldCallApi = true;
     }
@@ -84,21 +171,17 @@ class SignupCubit extends Cubit<SignupState> {
 
   Future<void> verifyOTP(String? code) async {
     if (code == null || code.isEmpty) {
-      emit(SignupState(AppResultState.error("Please Enter OTP Code")));
+      _safeEmit(SignupState(AppResultState.error('Please Enter OTP Code')));
       return;
     }
     shouldCallApi = false;
     try {
-      // Perform field validation
+      _safeEmit(SignupState(AppResultState.loading('Verifying OTP...')));
 
-      emit(SignupState(AppResultState.loading('Verifying OTP...')));
-
-      AppResultState<String> _response = await repo.verifyOTP(code!);
-
-      emit(SignupState(_response));
+      final response = await repo.verifyOTP(code);
+      _safeEmit(SignupState(response));
     } catch (error) {
-      // Handle other errors (not related to signup result)
-      emit(SignupState(AppResultState.error(error.toString())));
+      _safeEmit(SignupState(AppResultState.error(error.toString())));
     } finally {
       shouldCallApi = true;
     }
@@ -112,18 +195,17 @@ class SignupCubit extends Cubit<SignupState> {
     String? password,
     String? confirmPassword,
   }) {
-    // Use the Validator class for field validation
-    String? emailError = Validator.isEmailValid(email ?? '');
-    String? phoneError = Validator.isPhoneValid(phone);
-    String? passwordError = Validator.isPasswordValid(password ?? '');
-    String? confirmPasswordError =
+    final emailError = Validator.isEmailValid(email ?? '');
+    final phoneError = Validator.isPhoneValid(phone);
+    final passwordError = Validator.isPasswordValid(password ?? '');
+    final confirmPasswordError =
         Validator.isPasswordValid(confirmPassword ?? '');
-    String? firstNameError = Validator.isNameValid(firstName);
-    String? lastNameError = Validator.isNameValid(lastName);
+    final firstNameError = Validator.isNameValid(firstName);
+    final lastNameError = Validator.isNameValid(lastName);
     if (firstNameError != null) {
-      return "first $firstNameError";
+      return 'first $firstNameError';
     } else if (lastNameError != null) {
-      return "last $lastNameError";
+      return 'last $lastNameError';
     } else if (emailError != null) {
       return emailError;
     } else if (phoneError != null) {
@@ -133,10 +215,8 @@ class SignupCubit extends Cubit<SignupState> {
     } else if (confirmPasswordError != null) {
       return confirmPasswordError;
     } else if (password != confirmPassword) {
-      return "Password and Confirm Password do not match";
+      return 'Password and Confirm Password do not match';
     }
-
-    // validationErrors.add("Password and Confirm Password do not match");
 
     return null;
   }
