@@ -5,28 +5,25 @@ import 'package:blood_synergy_app/helpers/app_result_state.dart';
 import 'package:blood_synergy_app/helpers/env_config.dart';
 import 'package:blood_synergy_app/helpers/pending_signup_storage.dart';
 import 'package:blood_synergy_app/helpers/validator.dart';
-import 'package:blood_synergy_app/services/twilio_otp_service.dart';
+import 'package:blood_synergy_app/services/sendgrid_otp_service.dart';
 import 'package:meta/meta.dart';
 
 part 'signup_state.dart';
 
 class SignupCubit extends Cubit<SignupState> {
   AuthenticationRepository repo;
-  final TwilioOtpService _twilioOtpService = TwilioOtpService();
+  final SendGridOtpService _sendGridOtpService = SendGridOtpService();
 
   SignupCubit(this.repo) : super(SignupState(null));
   bool shouldCallApi = true;
 
   void _safeEmit(SignupState state) {
     if (!isClosed) {
-      print('DEBUG CUBIT: Emitting state: ${state.signupResult?.runtimeType}');
       emit(state);
-    } else {
-      print('DEBUG CUBIT: Cubit is closed, cannot emit');
     }
   }
 
-  /// Validates form, saves signup data locally, sends Twilio OTP (no API signup yet).
+  /// Validates form, saves signup data locally, sends email OTP (no API signup yet).
   Future<void> prepareSignupAndSendOtp({
     String? email,
     String? firstName,
@@ -53,7 +50,7 @@ class SignupCubit extends Cubit<SignupState> {
       }
 
       _safeEmit(SignupState(
-          AppResultState.loading('Saving your details and sending OTP...')));
+          AppResultState.loading('Saving your details and sending code...')));
 
       final signupData = SignupRequest(
         email: email,
@@ -68,7 +65,7 @@ class SignupCubit extends Cubit<SignupState> {
 
       await PendingSignupStorage.savePendingSignup(signupData);
 
-      final otpResult = await _twilioOtpService.sendOtp(phone!);
+      final otpResult = await _sendGridOtpService.sendOtp(email!.trim());
       _safeEmit(SignupState(otpResult));
     } catch (error) {
       _safeEmit(SignupState(AppResultState.error(error.toString())));
@@ -77,10 +74,11 @@ class SignupCubit extends Cubit<SignupState> {
     }
   }
 
-  /// Resend Twilio OTP during signup (after 2-minute window).
-  Future<void> resendTwilioOtp(String phone) async {
+  /// Resend email OTP during signup (after 2-minute window).
+  Future<void> resendEmailOtp(String email) async {
     shouldCallApi = false;
-    _safeEmit(SignupState(AppResultState.loading('Resending verification code...')));
+    _safeEmit(
+        SignupState(AppResultState.loading('Resending verification code...')));
 
     try {
       final pending = await PendingSignupStorage.loadPendingSignup();
@@ -90,7 +88,8 @@ class SignupCubit extends Cubit<SignupState> {
         return;
       }
 
-      final otpResult = await _twilioOtpService.sendOtp(phone);
+      final otpResult = await _sendGridOtpService
+          .sendOtp(email.trim().isNotEmpty ? email : pending.email!);
       _safeEmit(SignupState(otpResult));
     } catch (error) {
       _safeEmit(SignupState(AppResultState.error(error.toString())));
@@ -99,10 +98,11 @@ class SignupCubit extends Cubit<SignupState> {
     }
   }
 
-  /// Verify Twilio OTP locally, then call signup API.
-  Future<void> verifyTwilioOtpAndRegister(String? code) async {
+  /// Verify email OTP locally, then call signup API.
+  Future<void> verifyEmailOtpAndRegister(String? code) async {
     if (code == null || code.isEmpty) {
-      _safeEmit(SignupState(AppResultState.error('Please enter the verification code')));
+      _safeEmit(SignupState(
+          AppResultState.error('Please enter the verification code')));
       return;
     }
 
@@ -131,24 +131,19 @@ class SignupCubit extends Cubit<SignupState> {
           AppResultState.loading('Verified! Creating your account...')));
 
       final response = await repo.signup(pending);
-      print('DEBUG CUBIT: Got response type: ${response.runtimeType}');
-      
+
       if (response is RespErrorState<String>) {
-        print('DEBUG CUBIT: Error response - ${response.failure?.errorMessage}');
         _safeEmit(SignupState(response));
       } else if (response is RespSuccessState<String>) {
-        print('DEBUG CUBIT: Success response');
         await PendingSignupStorage.clear();
         _safeEmit(SignupState(AppResultState.successNavigate(
             response.value ?? 'Account created successfully')));
       } else {
-        print('DEBUG CUBIT: Unknown response type, treating as success');
         await PendingSignupStorage.clear();
         _safeEmit(SignupState(AppResultState.successNavigate(
             'Account created successfully')));
       }
     } catch (error) {
-      await PendingSignupStorage.clear();
       _safeEmit(SignupState(AppResultState.error(error.toString())));
     } finally {
       shouldCallApi = true;

@@ -33,4 +33,14 @@ class EnvConfig {
   static String get twilioAuthToken => get('TWILIO_AUTH_TOKEN', fallback: '');
 
   static String get twilioNumber => get('TWILIO_NUMBER', fallback: '');
+
+  static String get sendgridApiKey => get('SENDGRID_API_KEY',
+      fallback: get('TWILIO_SENDGRID_API_KEY', fallback: ''));
+
+  static String get sendgridFromEmail =>
+      get('SENDGRID_FROM_EMAIL', fallback: 'synergyblood@gmail.com');
+
+  /// Set MOCK_EMAIL_OTP=true in .env to skip SendGrid and print OTP to console.
+  static bool get mockEmailOtp =>
+      get('MOCK_EMAIL_OTP', fallback: 'false').toLowerCase() == 'true';
 }

@@ -1,7 +1,7 @@
 import 'package:blood_synergy_app/Cubits/signup_cubit/signup_cubit.dart';
 import 'package:blood_synergy_app/helpers/AppNavigator.dart';
 import 'package:blood_synergy_app/helpers/app_result_state.dart';
-import 'package:blood_synergy_app/helpers/apploader.dart';
+import 'package:blood_synergy_app/helpers/network_error_message.dart';
 import 'package:blood_synergy_app/themes/textTheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,8 +29,7 @@ class _otpVerificationScreenState extends State<otpVerificationScreen> {
   int endTime =
       DateTime.now().millisecondsSinceEpoch + _otpWindowSeconds * 1000;
   String otp = '';
-  
-  final TextEditingController _otpController = TextEditingController();
+
   CountdownTimerController? _countdownController;
 
   @override
@@ -43,7 +42,6 @@ class _otpVerificationScreenState extends State<otpVerificationScreen> {
   void dispose() {
     _isDisposed = true;
     _countdownController?.dispose();
-    _otpController.dispose();
     super.dispose();
   }
 
@@ -69,7 +67,7 @@ class _otpVerificationScreenState extends State<otpVerificationScreen> {
     if (widget.fromForgotPassword) {
       context.read<SignupCubit>().resentOTP();
     } else {
-      context.read<SignupCubit>().resendTwilioOtp(widget.phone);
+      context.read<SignupCubit>().resendEmailOtp(widget.phone);
     }
     _resetCountdown();
   }
@@ -84,7 +82,7 @@ class _otpVerificationScreenState extends State<otpVerificationScreen> {
     if (widget.fromForgotPassword) {
       context.read<SignupCubit>().verifyOTP(otp);
     } else {
-      context.read<SignupCubit>().verifyTwilioOtpAndRegister(otp);
+      context.read<SignupCubit>().verifyEmailOtpAndRegister(otp);
     }
   }
 
@@ -108,10 +106,9 @@ class _otpVerificationScreenState extends State<otpVerificationScreen> {
               if (!widget.fromForgotPassword) {
                 _resetCountdown();
               }
-              AppLoader.showSnackbar(
-                context,
+              EasyLoading.showSuccess(
                 (state.signupResult as RespSuccessState).value.toString(),
-                true,
+                duration: const Duration(seconds: 2),
               );
             }
           } else if (state.signupResult is RespSuccessAndNavigateState) {
@@ -127,24 +124,33 @@ class _otpVerificationScreenState extends State<otpVerificationScreen> {
             }
           } else if (state.signupResult is RespErrorState) {
             EasyLoading.dismiss();
-            final errorMsg = (state.signupResult as RespErrorState).failure?.errorMessage ??
+            final errorState = state.signupResult as RespErrorState;
+            final failure = errorState.failure;
+            final errorMsg = failure?.errorMessage ??
                 'Registration failed. Please try again.';
+            final networkError = isNetworkFailure(
+              null,
+              failure: failure,
+            );
+
             EasyLoading.showError(
               errorMsg,
-              duration: const Duration(seconds: 2),
+              duration: const Duration(seconds: 3),
             );
-            
+
             if (mounted) {
               setState(() {
                 _isVerifying = false;
               });
             }
-            
-            Future.delayed(const Duration(milliseconds: 2000), () {
-              if (mounted) {
-                Navigator.pop(context);
-              }
-            });
+
+            if (!widget.fromForgotPassword && !networkError) {
+              Future.delayed(const Duration(milliseconds: 2500), () {
+                if (mounted) {
+                  Navigator.pop(context);
+                }
+              });
+            }
           }
         },
         child: Column(
@@ -179,10 +185,21 @@ class _otpVerificationScreenState extends State<otpVerificationScreen> {
                   Text(
                     widget.fromForgotPassword
                         ? 'Please enter the 6-digit code sent to ${widget.phone}'
-                        : 'Enter the 6-digit code we sent via SMS to ${widget.phone}. Code expires in 2 minutes.',
+                        : 'Enter the 6-digit code we sent to your email ${widget.phone}. Code expires in 2 minutes.',
                     style: appTextTheme.giloryRegular14lightGrey,
                     textAlign: TextAlign.start,
                   ),
+                  if (!widget.fromForgotPassword) ...[
+                    SizedBox(height: 8.h),
+                    Text(
+                      'If you don\'t see the email, please check your spam or junk folder.',
+                      style: appTextTheme.giloryRegular14lightGrey.copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: const Color.fromRGBO(120, 120, 120, 1),
+                      ),
+                      textAlign: TextAlign.start,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -191,7 +208,6 @@ class _otpVerificationScreenState extends State<otpVerificationScreen> {
               child: PinCodeTextField(
                 appContext: context,
                 length: 6,
-                controller: _otpController,
                 keyboardType: TextInputType.number,
                 animationType: AnimationType.fade,
                 pinTheme: PinTheme(

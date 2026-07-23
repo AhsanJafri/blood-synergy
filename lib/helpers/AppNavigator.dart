@@ -44,7 +44,7 @@ class AppNavigator {
       MaterialPageRoute(
           builder: (context) => BlocProvider(
                 create: (context) => LoginCubit(AuthenticationRepository(
-                    NetworkClient(Client(), dio: Dio()))),
+                    NetworkClient(Client(), dio: NetworkClient.createConfiguredDio()))),
                 child: loginScreen(),
               )),
       (route) => false,
@@ -73,7 +73,7 @@ class AppNavigator {
       MaterialPageRoute(
           builder: (context) => BlocProvider(
                 create: (context) => SignupCubit(AuthenticationRepository(
-                    NetworkClient(Client(), dio: Dio()))),
+                    NetworkClient(Client(), dio: NetworkClient.createConfiguredDio()))),
                 child: signUpScreen(),
               )),
     );
@@ -93,10 +93,12 @@ class AppNavigator {
     );
   }
 
-  static void navigateToTermsCondition(BuildContext context) {
+  static void navigateToTermsCondition(BuildContext context,
+      {bool fromSignup = false}) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => Termscondition()),
+      MaterialPageRoute(
+          builder: (context) => Termscondition(fromSignup: fromSignup)),
     );
   }
   static void navigateToDocDetail(BuildContext context) {
@@ -115,7 +117,8 @@ class AppNavigator {
         MaterialPageRoute(
           builder: (context) => BlocProvider(
             create: (context) => SignupCubit(
-                AuthenticationRepository(NetworkClient(Client(), dio: Dio()))),
+                AuthenticationRepository(NetworkClient(
+                    Client(), dio: NetworkClient.createConfiguredDio()))),
             child: otpVerificationScreen(phone, forgotPassword),
           ),
         ),

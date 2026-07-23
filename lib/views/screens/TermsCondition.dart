@@ -1,11 +1,15 @@
+import 'package:blood_synergy_app/helpers/env_config.dart';
 import 'package:blood_synergy_app/themes/textTheme.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Termscondition extends StatefulWidget {
-  const Termscondition({Key? key}) : super(key: key);
+  final bool fromSignup;
+
+  const Termscondition({Key? key, this.fromSignup = false}) : super(key: key);
 
   //  String? givenUrl;
   //  PrivacyPolicyScreen({super.key, required this.givenUrl});
@@ -20,14 +24,61 @@ class _PrivacyPolicyScreenState extends State<Termscondition> {
   bool isLoading = true;
   bool hasError = false;
   String errorMessage = '';
+  String? _htmlContent;
   String? _termsChoice; // 'accepted' | 'rejected' | null
   bool _prefsLoaded = false;
   bool _showWebViewAfterAccept = false;
+
+  String get _termsUrl => '${EnvConfig.uploadBaseUrl}term-condition';
 
   @override
   void initState() {
     super.initState();
     _loadChoice();
+    _loadTermsContent();
+  }
+
+  Future<void> _loadTermsContent() async {
+    try {
+      final dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+      ));
+      final response = await dio.get<String>(
+        _termsUrl,
+        options: Options(
+          responseType: ResponseType.plain,
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+      if (!mounted) return;
+      if (response.statusCode == 200 &&
+          response.data != null &&
+          response.data!.trim().isNotEmpty) {
+        setState(() {
+          _htmlContent = response.data;
+          isLoading = false;
+          hasError = false;
+          errorMessage = '';
+        });
+        return;
+      }
+      setState(() {
+        isLoading = false;
+        hasError = true;
+        errorMessage =
+            'Unable to load terms (HTTP ${response.statusCode ?? 'unknown'}).';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+        hasError = true;
+        errorMessage = e is DioException
+            ? (e.message ?? 'Network error')
+            : e.toString();
+      });
+    }
   }
 
   Future<void> _loadChoice() async {
@@ -91,13 +142,18 @@ class _PrivacyPolicyScreenState extends State<Termscondition> {
 
                   // If not accepted, show the webview (this covers null and 'rejected')
                   // if (_prefsLoaded && (_termsChoice != 'accepted' || _showWebViewAfterAccept))
+                  if (_htmlContent != null)
                     Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10.r),
                       ),
                       child: InAppWebView(
-                        initialUrlRequest: URLRequest(
-                          url: WebUri("https://bloodsynergybackend.trangotech.dev/term-condition"),
+                        key: ValueKey(_htmlContent.hashCode),
+                        initialData: InAppWebViewInitialData(
+                          data: _htmlContent!,
+                          mimeType: 'text/html',
+                          encoding: 'utf-8',
+                          baseUrl: WebUri(_termsUrl),
                         ),
                         onWebViewCreated: (controller) {
                           webViewController = controller;
@@ -301,7 +357,7 @@ class _PrivacyPolicyScreenState extends State<Termscondition> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Failed to load Privacy Policy',
+                                'Failed to load Terms & Conditions',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -322,13 +378,14 @@ class _PrivacyPolicyScreenState extends State<Termscondition> {
                               ),
                               const SizedBox(height: 24),
                               ElevatedButton.icon(
-                                onPressed: () {
+                                onPressed: () async {
                                   setState(() {
                                     isLoading = true;
                                     hasError = false;
                                     errorMessage = '';
+                                    _htmlContent = null;
                                   });
-                                  webViewController.reload();
+                                  await _loadTermsContent();
                                 },
                                 icon: const Icon(Icons.refresh, color: Colors.white),
                                 label: const Text(
@@ -361,8 +418,12 @@ class _PrivacyPolicyScreenState extends State<Termscondition> {
       ),
       bottomNavigationBar: 
       
-            (_prefsLoaded && _termsChoice == 'accepted' && !_showWebViewAfterAccept) == true?
-                    Container(
+            (_prefsLoaded &&
+                    _termsChoice == 'accepted' &&
+                    !_showWebViewAfterAccept &&
+                    !widget.fromSignup) ==
+                true
+                    ? Container(
                       color: Colors.white,
                       child: Center(
                         child: Padding(

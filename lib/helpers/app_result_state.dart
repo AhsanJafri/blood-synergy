@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:blood_synergy_app/helpers/network_error_message.dart';
+import 'package:dio/dio.dart';
+
 class AppResultState<T> {
   AppResultState._();
   factory AppResultState.loading(T msg) = LoadingState<T>;
@@ -29,20 +32,28 @@ class RespErrorState<T> extends AppResultState<T> {
             "Unauthenticated: ${failure?.errorCode}: ${failure?.errorMessage}");
         // Util.unauthenticatedUser(build);
       }
+    } else if (error is DioException) {
+      failure = Failure(
+        errorMessage: friendlyNetworkError(error),
+        errorCode: isNetworkFailure(error) ? 2 : 5,
+      );
     } else if (error is HttpException) {
       failure = Failure(
           errorMessage: (error as HttpException).message.toString(),
           errorCode: 1);
     } else if (error is SocketException || error is TimeoutException) {
       failure = Failure(
-          errorMessage: (error as SocketException).message.toString(),
+          errorMessage: friendlyNetworkError(error),
           errorCode: 2);
     } else if (error is FormatException) {
       failure = Failure(
           errorMessage: (error as FormatException).message.toString(),
           errorCode: 3);
     } else {
-      failure = Failure(errorMessage: error.toString(), errorCode: 5);
+      failure = Failure(
+        errorMessage: friendlyNetworkError(error),
+        errorCode: isNetworkFailure(error) ? 2 : 5,
+      );
     }
   }
 
@@ -68,7 +79,7 @@ class RespSuccessAndNavigateState<T> extends AppResultState<T> {
   RespSuccessAndNavigateState(this.value) : super._();
 }
 
-class Failure {
+class Failure implements FailureLike {
   String? errorMessage;
   int errorCode = 0;
 

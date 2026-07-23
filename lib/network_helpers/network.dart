@@ -11,6 +11,18 @@ import 'package:http/http.dart';
 class NetworkClient {
   final Client _client;
   final Dio.Dio dio;
+
+  static Dio.Dio createConfiguredDio() {
+    return Dio.Dio(
+      Dio.BaseOptions(
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        sendTimeout: const Duration(seconds: 30),
+        headers: {'Accept': 'application/json'},
+      ),
+    );
+  }
+
   String buildQueryString(Map<String, dynamic> parameters) {
     return parameters.entries
         .map((entry) => '${entry.key}=${entry.value}')
@@ -92,17 +104,24 @@ class NetworkClient {
     print(headerWithAuth == true
         ? (ServerSettings.headerWithAuth(Constants.token))
         : (ServerSettings.headers));
-    return dio.post('${ServerSettings.baseURL}$path',
-        data: parameter,
-        options: Dio.Options(
-          followRedirects: false,
-          validateStatus: (status) => true,
-          headers: headerWithAuth == true
-              ? ServerSettings.dioHeaderWithAuth(Constants.token)
-              : {
-                  "contentType": 'multipart/form-data',
-                },
-        ));
+    final headers = headerWithAuth == true
+        ? <String, dynamic>{
+            'Authorization': 'Bearer ${Constants.token}',
+            'Accept': 'application/json',
+          }
+        : <String, dynamic>{
+            'Accept': 'application/json',
+          };
+
+    return dio.post(
+      '${ServerSettings.baseURL}$path',
+      data: parameter,
+      options: Dio.Options(
+        followRedirects: false,
+        validateStatus: (status) => true,
+        headers: headers,
+      ),
+    );
   }
 
   Future<Dio.Response> dioMainApiRequest({
@@ -117,8 +136,8 @@ class NetworkClient {
       options: Dio.Options(
         followRedirects: false,
         validateStatus: (status) => true,
-        headers: {
-          "contentType": 'multipart/form-data',
+        headers: const {
+          'Accept': 'application/json',
         },
       ),
     );

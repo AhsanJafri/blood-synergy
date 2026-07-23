@@ -16,6 +16,7 @@
         "flutter",
         "flutter_bloc",
         "flutter_countdown_timer",
+        "flutter_dotenv",
         "flutter_easyloading",
         "flutter_facebook_auth",
         "flutter_html",
@@ -30,10 +31,12 @@
         "otp_text_field",
         "path_provider",
         "percent_indicator",
+        "pin_code_fields",
         "shared_preferences",
         "sign_in_with_apple",
         "syncfusion_flutter_charts",
         "syncfusion_flutter_gauges",
+        "twilio_flutter",
         "url_launcher"
       ],
       "devDependencies": [
@@ -64,6 +67,22 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "twilio_flutter",
+      "version": "0.9.0",
+      "dependencies": [
+        "get_it",
+        "http",
+        "logging"
+      ]
+    },
+    {
+      "name": "flutter_dotenv",
+      "version": "5.2.1",
+      "dependencies": [
+        "flutter"
       ]
     },
     {
@@ -296,6 +315,13 @@
       ]
     },
     {
+      "name": "pin_code_fields",
+      "version": "8.0.1",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
       "name": "otp_text_field",
       "version": "1.1.3",
       "dependencies": [
@@ -434,6 +460,30 @@
         "stream_channel",
         "string_scanner",
         "term_glyph"
+      ]
+    },
+    {
+      "name": "logging",
+      "version": "1.3.0",
+      "dependencies": []
+    },
+    {
+      "name": "get_it",
+      "version": "7.7.0",
+      "dependencies": [
+        "async",
+        "collection",
+        "meta"
+      ]
+    },
+    {
+      "name": "http",
+      "version": "1.5.0",
+      "dependencies": [
+        "async",
+        "http_parser",
+        "meta",
+        "web"
       ]
     },
     {
@@ -850,16 +900,6 @@
         "flutter",
         "http",
         "vector_graphics_codec"
-      ]
-    },
-    {
-      "name": "http",
-      "version": "1.5.0",
-      "dependencies": [
-        "async",
-        "http_parser",
-        "meta",
-        "web"
       ]
     },
     {

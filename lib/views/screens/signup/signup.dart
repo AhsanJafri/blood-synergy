@@ -79,10 +79,9 @@ class _signUpScreenState extends State<signUpScreen>
               EasyLoading.show(
                   status: ((state.signupResult as LoadingState).msg));
             } else if (state.signupResult is RespSuccessState) {
-              final phone = countryPhoneCode + _phoneCodeController.text.trim();
               AppNavigator.navigateToOTP(
                 context,
-                phone,
+                _emailController.text.trim(),
                 false,
                 signupCubit: BlocProvider.of<SignupCubit>(context),
               );
@@ -567,7 +566,10 @@ class _signUpScreenState extends State<signUpScreen>
                                 ),
                                 InkWell(
                                   onTap: () {
-                                    // util.push(context, TermsAndCondScreen());
+                                    AppNavigator.navigateToTermsCondition(
+                                      context,
+                                      fromSignup: true,
+                                    );
                                   },
                                   child: const Text(
                                     ' Terms of Services',
@@ -591,7 +593,7 @@ class _signUpScreenState extends State<signUpScreen>
                             ),
                             InkWell(
                               onTap: () {
-                                // util.push(context, privacyPolicyScreen());
+                                AppNavigator.navigateToPrivacyPolicy(context);
                               },
                               child: Padding(
                                 padding: const EdgeInsets.only(top: 1).r,
