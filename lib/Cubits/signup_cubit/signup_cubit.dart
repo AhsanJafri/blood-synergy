@@ -4,6 +4,7 @@ import 'package:blood_synergy_app/Repositories/AuthenticationRepository.dart';
 import 'package:blood_synergy_app/helpers/app_result_state.dart';
 import 'package:blood_synergy_app/helpers/env_config.dart';
 import 'package:blood_synergy_app/helpers/pending_signup_storage.dart';
+import 'package:blood_synergy_app/helpers/password_reset_storage.dart';
 import 'package:blood_synergy_app/helpers/validator.dart';
 import 'package:blood_synergy_app/services/sendgrid_otp_service.dart';
 import 'package:meta/meta.dart';
@@ -98,6 +99,25 @@ class SignupCubit extends Cubit<SignupState> {
     }
   }
 
+  /// Resend the locally generated password-reset OTP to the returned email.
+  Future<void> resendPasswordResetOtp(String email) async {
+    shouldCallApi = false;
+    _safeEmit(
+        SignupState(AppResultState.loading('Resending verification code...')));
+
+    try {
+      final otpResult = await _sendGridOtpService.sendOtp(
+        email.trim(),
+        forPasswordReset: true,
+      );
+      _safeEmit(SignupState(otpResult));
+    } catch (error) {
+      _safeEmit(SignupState(AppResultState.error(error.toString())));
+    } finally {
+      shouldCallApi = true;
+    }
+  }
+
   /// Verify email OTP locally, then call signup API.
   Future<void> verifyEmailOtpAndRegister(String? code) async {
     if (code == null || code.isEmpty) {
@@ -175,6 +195,37 @@ class SignupCubit extends Cubit<SignupState> {
 
       final response = await repo.verifyOTP(code);
       _safeEmit(SignupState(response));
+    } catch (error) {
+      _safeEmit(SignupState(AppResultState.error(error.toString())));
+    } finally {
+      shouldCallApi = true;
+    }
+  }
+
+  /// Verify the password-reset OTP on-device before allowing a password change.
+  Future<void> verifyPasswordResetOtp(String? code) async {
+    if (code == null || code.isEmpty) {
+      _safeEmit(SignupState(AppResultState.error('Please enter the verification code')));
+      return;
+    }
+
+    shouldCallApi = false;
+    try {
+      if (PasswordResetStorage.isOtpExpired()) {
+        _safeEmit(SignupState(AppResultState.error(
+            'Verification code expired. Tap Resend to get a new code.')));
+        return;
+      }
+
+      if (!PasswordResetStorage.verifyOtp(code)) {
+        _safeEmit(SignupState(
+            AppResultState.error('Invalid verification code. Please try again.')));
+        return;
+      }
+
+      await PasswordResetStorage.markOtpVerified();
+      _safeEmit(SignupState(
+          AppResultState.successNavigate('Email verified successfully.')));
     } catch (error) {
       _safeEmit(SignupState(AppResultState.error(error.toString())));
     } finally {

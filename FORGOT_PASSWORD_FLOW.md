@@ -2,12 +2,12 @@
 
 ## Status
 
-The forgot-password flow is implemented in the Flutter application. It allows a customer to enter a registered phone number, verify an OTP, and set a new password.
+The forgot-password flow is implemented in the Flutter application. It allows a customer to enter a registered phone number, receive a six-digit OTP at the email returned by the backend, verify that OTP locally, and set a new password.
 
 The API base URL is read from `BASE_URL` in `.env`. The current fallback is:
 
 ```text
-https://bloodsynergybackend.trangotech.dev/api/
+https://web.blood-synergy.com/api/
 ```
 
 ## User flow
@@ -17,14 +17,15 @@ Login
   -> Recover Password?
   -> Enter registered phone number
   -> POST customer/forgot
-  -> Enter or resend the 6-digit OTP
-  -> POST customer/verify/otp
+  -> Read email and reset token from the response
+  -> Send or resend a 6-digit OTP through SendGrid
+  -> Verify the OTP locally on the device
   -> Enter and confirm the new password
   -> POST customer/change/password
   -> Password updated
 ```
 
-The forgot-password API returns a token. The app stores this token and sends it as a Bearer token when resending/verifying the OTP and changing the password.
+The forgot-password API returns the customer email and a backend reset token. The app sends the locally generated OTP to that email through SendGrid. The backend reset token is kept separately and is sent as a Bearer token only when changing the password after local OTP verification.
 
 ## APIs
 
@@ -50,44 +51,29 @@ Expected successful response shape:
 {
   "status": 200,
   "message": "OTP sent successfully",
-  "token": "reset-token"
+  "data": {
+    "phone": "+923001234567",
+    "email": "customer@example.com"
+  },
+  "token": "backend-reset-token"
 }
 ```
 
-The app proceeds to OTP verification when the response contains a non-null `token`.
+The app stores the email and backend reset token, then sends a newly generated six-digit OTP to the returned email through SendGrid.
 
-### 2. Resend OTP
+### 2. Send or resend email OTP
 
-```http
-GET {BASE_URL}/customer/resend/otp
-Authorization: Bearer <reset-token>
-```
+The app uses the existing `SendGridOtpService` to send the six-digit OTP. The OTP is stored locally and expires after two minutes. Resend is also sent through SendGrid after the countdown; the backend `resend/otp` endpoint is not used for this flow.
 
-The OTP screen enables resend after a two-minute countdown. A `status` of `200` is treated as success.
+### 3. Verify OTP locally
 
-### 3. Verify OTP
-
-```http
-POST {BASE_URL}/customer/verify/otp
-Authorization: Bearer <reset-token>
-Content-Type: application/json
-```
-
-Request:
-
-```json
-{
-  "code": "123456"
-}
-```
-
-A `status` of `200` opens the Set New Password screen.
+The app compares the entered code with the locally stored code and checks the two-minute expiry. A match opens the Set New Password screen. The backend `verify/otp` endpoint is not used for this flow.
 
 ### 4. Set new password
 
 ```http
 POST {BASE_URL}/customer/change/password
-Authorization: Bearer <reset-token>
+Authorization: Bearer <backend-reset-token>
 ```
 
 Request:
@@ -106,7 +92,7 @@ A `status` of `200` is displayed as a successful password update.
 
 - `lib/views/screens/loginn/loginScreen.dart` - recovery entry point.
 - `lib/views/screens/Password/ForgotPassword.dart` - phone-number form.
-- `lib/views/screens/otpVerification/otpVerification.dart` - OTP verification and resend.
+- `lib/views/screens/otpVerification/otpVerification.dart` - email OTP verification and resend.
 - `lib/views/screens/Password/SetNewPassword.dart` - new-password form.
 - `lib/Cubits/login_cubit/login_cubit.dart` - phone validation and reset request state.
 - `lib/Cubits/signup_cubit/signup_cubit.dart` - OTP actions and state.
@@ -116,8 +102,6 @@ A `status` of `200` is displayed as a successful password update.
 
 ## Known implementation gaps
 
-- The confirmation password is currently ignored because `password` is passed twice to validation.
-- Password mismatch and the password rules shown on the screen are not enforced correctly.
 - After a successful reset, the screen is popped instead of explicitly navigating to Login.
-- The reset token is persisted as the application's normal authentication token before OTP verification; this should match the backend's intended security design.
-- There are currently no automated tests for this flow.
+- The reset token and OTP are stored locally for the duration of the reset session.
+- SendGrid must be configured with `SENDGRID_API_KEY` and `SENDGRID_FROM_EMAIL`.

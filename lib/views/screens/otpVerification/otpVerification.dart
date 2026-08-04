@@ -65,7 +65,7 @@ class _otpVerificationScreenState extends State<otpVerificationScreen> {
   void _onResend() {
     if (!_canResend) return;
     if (widget.fromForgotPassword) {
-      context.read<SignupCubit>().resentOTP();
+      context.read<SignupCubit>().resendPasswordResetOtp(widget.phone);
     } else {
       context.read<SignupCubit>().resendEmailOtp(widget.phone);
     }
@@ -80,7 +80,7 @@ class _otpVerificationScreenState extends State<otpVerificationScreen> {
     });
     
     if (widget.fromForgotPassword) {
-      context.read<SignupCubit>().verifyOTP(otp);
+      context.read<SignupCubit>().verifyPasswordResetOtp(otp);
     } else {
       context.read<SignupCubit>().verifyEmailOtpAndRegister(otp);
     }
@@ -184,7 +184,7 @@ class _otpVerificationScreenState extends State<otpVerificationScreen> {
                   SizedBox(height: 9.h),
                   Text(
                     widget.fromForgotPassword
-                        ? 'Please enter the 6-digit code sent to ${widget.phone}'
+                        ? 'Enter the 6-digit code sent to your email ${widget.phone}. Code expires in 2 minutes.'
                         : 'Enter the 6-digit code we sent to your email ${widget.phone}. Code expires in 2 minutes.',
                     style: appTextTheme.giloryRegular14lightGrey,
                     textAlign: TextAlign.start,

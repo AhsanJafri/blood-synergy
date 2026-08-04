@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:blood_synergy_app/helpers/enumhoarder.dart';
 import 'package:blood_synergy_app/helpers/nothing.dart';
 import 'package:blood_synergy_app/network_helpers/serverSettings.dart';
@@ -97,16 +95,18 @@ class NetworkClient {
       {required requestType,
       String? path,
       bool? headerWithAuth,
-      dynamic parameter = Nothing}) async {
+      dynamic parameter = Nothing,
+      String? bearerToken}) async {
     // switch(requestType){
     // case RequestType.POST:
     print("'${ServerSettings.baseURL}$path'");
     print(headerWithAuth == true
         ? (ServerSettings.headerWithAuth(Constants.token))
         : (ServerSettings.headers));
+    final authToken = bearerToken ?? Constants.token;
     final headers = headerWithAuth == true
         ? <String, dynamic>{
-            'Authorization': 'Bearer ${Constants.token}',
+            'Authorization': 'Bearer $authToken',
             'Accept': 'application/json',
           }
         : <String, dynamic>{
@@ -141,14 +141,5 @@ class NetworkClient {
         },
       ),
     );
-  }
-}
-
-class MyHttpOverrides extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
   }
 }

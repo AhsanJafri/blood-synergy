@@ -9,6 +9,7 @@ import 'package:blood_synergy_app/helpers/Constants.dart';
 
 import 'package:blood_synergy_app/helpers/app_result_state.dart';
 import 'package:blood_synergy_app/helpers/enumhoarder.dart';
+import 'package:blood_synergy_app/helpers/password_reset_storage.dart';
 import 'package:blood_synergy_app/network_helpers/NetworkEndpoint.dart';
 
 import 'package:blood_synergy_app/network_helpers/network.dart';
@@ -293,10 +294,25 @@ class AuthenticationRepository {
   Future<AppResultState<String>> changePassword(
       String oldPassword, String password, bool isForgot) async {
     try {
+      String? resetToken;
+      if (isForgot) {
+        if (!PasswordResetStorage.isOtpVerified) {
+          return AppResultState.error(
+              'Please verify the email code before changing your password.');
+        }
+
+        resetToken = PasswordResetStorage.resetToken;
+        if (resetToken == null || resetToken.isEmpty) {
+          return AppResultState.error(
+              'Password reset session expired. Please try again.');
+        }
+      }
+
       final _response = await _networkClient.dioRequest(
           requestType: RequestType.POST,
           path: NetworkEndPoints.changepassword,
           headerWithAuth: true,
+          bearerToken: resetToken,
           parameter: jsonEncode({
             'password': password,
             'old_password': oldPassword,
@@ -304,6 +320,9 @@ class AuthenticationRepository {
           }));
       final decodedResponse = BaseResponse.fromJson(jsonEncode(_response.data));
       if (decodedResponse.status == 200) {
+        if (isForgot) {
+          await PasswordResetStorage.clear();
+        }
         return AppResultState.successNavigate(decodedResponse.message);
       } else {
         // Return an error state with a Failure object
@@ -316,24 +335,46 @@ class AuthenticationRepository {
 
   Future<AppResultState<String>> forgotPassword(String phone) async {
     try {
+      final url =
+          '${ServerSettings.baseURL}${NetworkEndPoints.forgotPassword}';
+      final requestBody = jsonEncode({'phone': phone});
+
+      print('[FORGOT_PASSWORD] API URL: $url');
+      print('[FORGOT_PASSWORD] Request body: $requestBody');
+
       final _response = await _networkClient.dioRequest(
           requestType: RequestType.POST,
           path: NetworkEndPoints.forgotPassword,
           headerWithAuth: false,
-          parameter: jsonEncode({"phone": phone}));
+          parameter: requestBody);
+
+      print('[FORGOT_PASSWORD] HTTP status: ${_response.statusCode}');
+      print('[FORGOT_PASSWORD] Raw response: ${_response.data}');
+
       final decodedResponse = BaseResponse.fromJson(jsonEncode(_response.data));
-      print(decodedResponse);
-      if (decodedResponse.token != null) {
-        // Do additional processing if needed
-        UserPref.persistUserToken(decodedResponse.token ?? '');
-        await AppStateManagerState.shared.getUserData();
-        Constants.token =
-            await UserPref.getUserToken() ?? decodedResponse.token ?? '';
-        return AppResultState.successNavigate(decodedResponse.message);
+      print('[FORGOT_PASSWORD] Parsed status: ${decodedResponse.status}');
+      print('[FORGOT_PASSWORD] Parsed message: ${decodedResponse.message}');
+      print('[FORGOT_PASSWORD] Reset token: ${decodedResponse.token}');
+
+      final email = decodedResponse.jsonData?['email']?.toString().trim();
+      print('[FORGOT_PASSWORD] Reset email: $email');
+
+      if (decodedResponse.status == 200 &&
+          decodedResponse.token != null &&
+          decodedResponse.token!.isNotEmpty &&
+          email != null &&
+          email.isNotEmpty) {
+        await PasswordResetStorage.saveSession(
+          resetToken: decodedResponse.token!,
+          email: email,
+        );
+        return AppResultState.successNavigate(email);
       } else {
-        return AppResultState.error(decodedResponse.message);
+        return AppResultState.error(
+            decodedResponse.message ?? 'Could not start password reset.');
       }
     } catch (error) {
+      print('[FORGOT_PASSWORD] Request failed: $error');
       return AppResultState.error(error.toString());
     }
   }

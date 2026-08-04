@@ -17,7 +17,7 @@ class UpdatePasswordCubit extends Cubit<UpdatePasswordState> {
     if (!apiCalled) {
       apiCalled = true;
       AppResultState<String>? validationResult =
-          _validateInput(password, password);
+          _validateInput(password, confirmPassword);
 
       if (validationResult != null) {
         emit(UpdatePasswordInitial(validationResult));
@@ -27,7 +27,7 @@ class UpdatePasswordCubit extends Cubit<UpdatePasswordState> {
 
       emit(UpdatePasswordState(AppResultState.loading("Please wait...")));
 
-      await _setNewPassword(password, password);
+      await _setNewPassword(password);
     }
   }
 
@@ -52,7 +52,7 @@ class UpdatePasswordCubit extends Cubit<UpdatePasswordState> {
     return null;
   }
 
-  Future<void> _setNewPassword(String username, String password) async {
+  Future<void> _setNewPassword(String password) async {
     final _response = await repo.changePassword('', password, true);
     apiCalled = false;
     emit(UpdatePasswordState(_response));

@@ -7,13 +7,13 @@ class EnvConfig {
           : fallback;
 
   static String get baseUrl =>
-      get('BASE_URL', fallback: 'https://bloodsynergybackend.trangotech.dev/api/');
+      get('BASE_URL', fallback: 'https://web.blood-synergy.com/api/');
 
   static String get mainBaseUrl =>
       get('MAIN_BASE_URL', fallback: 'https://web.blood-synergy.com');
 
   static String get uploadBaseUrl =>
-      get('UPLOAD_BASE_URL', fallback: 'https://bloodsynergybackend.trangotech.dev/');
+      get('UPLOAD_BASE_URL', fallback: 'https://web.blood-synergy.com/');
 
   static String get socketUrl =>
       get('SOCKET_URL', fallback: 'http://31.186.241.24:3016/');

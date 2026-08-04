@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:blood_synergy_app/helpers/AppPreference.dart';
-import 'package:blood_synergy_app/network_helpers/network.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +9,6 @@ import 'views/screens/splash/spalshScreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  HttpOverrides.global = MyHttpOverrides();
   await dotenv.load(fileName: '.env');
   await UserPref.initPrefs();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])

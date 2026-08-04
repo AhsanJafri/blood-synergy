@@ -47,7 +47,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     .read<LoginCubit>()
                     .emit(ForgotPasswordScreenStates(null));
                 AppNavigator.navigateToOTP(context,
-                    countryPhoneCode + _phoneCodeController.text, true);
+                    (state.forgotPasswordResults
+                            as RespSuccessAndNavigateState<String>)
+                        .value,
+                    true);
               } else if (state.forgotPasswordResults is RespErrorState) {
                 // Handle error state, e.g., show an error message
                 AppLoader.showSnackbar(

@@ -5,6 +5,7 @@ import 'package:blood_synergy_app/helpers/env_config.dart';
 import 'package:blood_synergy_app/helpers/pending_signup_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:blood_synergy_app/helpers/password_reset_storage.dart';
 
 class SendGridOtpService {
   static const _otpLength = 6;
@@ -22,15 +23,20 @@ class SendGridOtpService {
   String _otpMessage(String otp) =>
       'Your Blood Synergy verification code is $otp. It expires in 2 minutes.';
 
-  Future<AppResultState<String>> sendOtp(String email) async {
+  Future<AppResultState<String>> sendOtp(
+    String email, {
+    bool forPasswordReset = false,
+  }) async {
     final otp = _generateOtp();
+    debugPrint(
+        '[SENDGRID_OTP] Sending ${forPasswordReset ? 'password reset' : 'signup'} OTP to $email');
 
     if (EnvConfig.mockEmailOtp) {
       debugPrint('========================================');
       debugPrint('MOCK EMAIL OTP: $otp');
       debugPrint('Would send to: $email');
       debugPrint('========================================');
-      await PendingSignupStorage.saveOtp(otp);
+      await _saveOtp(otp, forPasswordReset);
       return AppResultState.success('Code sent to your email! (Mock: $otp)');
     }
 
@@ -71,8 +77,11 @@ class SendGridOtpService {
         },
       );
 
+      debugPrint('[SENDGRID_OTP] HTTP status: ${response.statusCode}');
+      debugPrint('[SENDGRID_OTP] Response: ${response.data}');
+
       if (response.statusCode == 202 || response.statusCode == 200) {
-        await PendingSignupStorage.saveOtp(otp);
+        await _saveOtp(otp, forPasswordReset);
         return AppResultState.success('Verification code sent to your email.');
       }
 
@@ -90,5 +99,11 @@ class SendGridOtpService {
     } catch (e) {
       return AppResultState.error(e.toString());
     }
+  }
+
+  Future<void> _saveOtp(String otp, bool forPasswordReset) {
+    return forPasswordReset
+        ? PasswordResetStorage.saveOtp(otp)
+        : PendingSignupStorage.saveOtp(otp);
   }
 }

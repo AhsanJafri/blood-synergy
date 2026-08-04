@@ -3,6 +3,8 @@ import 'package:blood_synergy_app/Models/SocialLoginRequestModel.dart';
 import 'package:blood_synergy_app/Repositories/AuthenticationRepository.dart';
 import 'package:blood_synergy_app/helpers/SocialMediaAuthManager.dart';
 import 'package:blood_synergy_app/helpers/app_result_state.dart';
+import 'package:blood_synergy_app/helpers/password_reset_storage.dart';
+import 'package:blood_synergy_app/services/sendgrid_otp_service.dart';
 import 'package:blood_synergy_app/helpers/validator.dart';
 import 'package:meta/meta.dart';
 
@@ -13,6 +15,7 @@ enum SocialLoginPlatforms { facebook, apple, google }
 class LoginCubit extends Cubit<LoginState> {
   AuthenticationRepository repo;
   LoginCubit(this.repo) : super(LoginInitial(null));
+  final SendGridOtpService _sendGridOtpService = SendGridOtpService();
 
   Future<void> login(
       {required String username, required String password}) async {
@@ -176,7 +179,26 @@ class LoginCubit extends Cubit<LoginState> {
     }
 
     emit(ForgotPasswordScreenStates(AppResultState.loading("Please wait...")));
-    final _response = await repo.forgotPassword(phone);
-    emit(ForgotPasswordScreenStates(_response));
+    final response = await repo.forgotPassword(phone);
+
+    if (response is RespSuccessAndNavigateState<String>) {
+      final email = response.value;
+      final otpResult = await _sendGridOtpService.sendOtp(
+        email,
+        forPasswordReset: true,
+      );
+
+      if (otpResult is RespErrorState<String>) {
+        await PasswordResetStorage.clear();
+        emit(ForgotPasswordScreenStates(otpResult));
+        return;
+      }
+
+      emit(ForgotPasswordScreenStates(
+          AppResultState.successNavigate(email)));
+      return;
+    }
+
+    emit(ForgotPasswordScreenStates(response));
   }
 }
