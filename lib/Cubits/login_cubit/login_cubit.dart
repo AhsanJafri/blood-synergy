@@ -18,9 +18,9 @@ class LoginCubit extends Cubit<LoginState> {
   final SendGridOtpService _sendGridOtpService = SendGridOtpService();
 
   Future<void> login(
-      {required String username, required String password}) async {
+      {required String email, required String password}) async {
     AppResultState<String>? validationResult =
-        _validateInput(username, password);
+        _validateInput(email, password);
 
     if (validationResult != null) {
       emit(LoginScreenStates(validationResult));
@@ -28,13 +28,13 @@ class LoginCubit extends Cubit<LoginState> {
     }
     emit(LoginScreenStates(AppResultState.loading("Signing in...")));
 
-    await _performLogin(username, password);
+    await _performLogin(email, password);
   }
 
-  AppResultState<String>? _validateInput(String username, String password) {
+  AppResultState<String>? _validateInput(String email, String password) {
     List<String?> errors = [];
 
-    if (username.isEmpty || password.isEmpty) {
+    if (email.isEmpty || password.isEmpty) {
       errors.add('Please enter credentials');
     }
 
@@ -159,27 +159,27 @@ class LoginCubit extends Cubit<LoginState> {
     return _response;
   }
 
-  Future<void> _performLogin(String username, String password) async {
+  Future<void> _performLogin(String email, String password) async {
     final _response = await repo.login(
-      username,
+      email,
       password,
     );
     emit(LoginScreenStates(_response));
   }
 
-  String? verifyPhone(String phone) {
-    return Validator.isPhoneValid(phone);
+  String? verifyEmail(String email) {
+    return Validator.isEmailValid(email);
   }
 
-  Future<void> forgotPassword(String phone) async {
-    var verify = verifyPhone(phone);
+  Future<void> forgotPassword(String email) async {
+    var verify = verifyEmail(email);
     if (verify != null) {
       emit(ForgotPasswordScreenStates(AppResultState.error(verify)));
       return;
     }
 
     emit(ForgotPasswordScreenStates(AppResultState.loading("Please wait...")));
-    final response = await repo.forgotPassword(phone);
+    final response = await repo.forgotPassword(email);
 
     if (response is RespSuccessAndNavigateState<String>) {
       final email = response.value;

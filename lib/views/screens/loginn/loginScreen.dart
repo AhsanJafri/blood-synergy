@@ -2,7 +2,6 @@ import 'package:blood_synergy_app/Cubits/login_cubit/login_cubit.dart';
 import 'package:blood_synergy_app/helpers/AppNavigator.dart';
 import 'package:blood_synergy_app/helpers/app_result_state.dart';
 import 'package:blood_synergy_app/helpers/apploader.dart';
-import 'package:blood_synergy_app/helpers/countryPickerTextField.dart';
 import 'package:blood_synergy_app/themes/textTheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,9 +20,8 @@ class _loginScreenState extends State<loginScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   bool _isobscure = true;
-  final TextEditingController _phoneNumberController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  var countryPhoneCode = '+1';
   // RemoteDataSource _apiResponce = RemoteDataSource();
   var isCalled = false;
   @override
@@ -179,6 +177,7 @@ class _loginScreenState extends State<loginScreen>
                 Container(
                   height: 50.h,
                   margin: const EdgeInsets.only(left: 15, right: 15, top: 10).r,
+                  alignment: Alignment.centerLeft,
                   decoration: const BoxDecoration(
                     color: Color.fromRGBO(243, 243, 243, 1),
                     borderRadius: BorderRadius.all(
@@ -199,22 +198,17 @@ class _loginScreenState extends State<loginScreen>
                     // ]),
                   ),
 
-                  child: SizedBox(
-                    height: 57.h,
-                    child: AppCountryInputTextField(
-                      hintLabel: 'Mobile Number',
-                      imageName: '',
-                      shouldObscure: false,
-                      imgWidth: 24,
-                      imgHeight: 24,
-                      myController: _phoneNumberController,
-                      onCountryChanged: (code) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          setState(() {
-                            countryPhoneCode = code;
-                          });
-                        });
-                      },
+                  child: TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
+                    textAlignVertical: TextAlignVertical.center,
+                    decoration: InputDecoration(
+                      hintText: 'Email',
+                      hintStyle: appTextTheme.giloryMedium14lightGrey,
+                      border: InputBorder.none,
+                      isCollapsed: true,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 18.w),
                     ),
                   ),
                   // ),
@@ -223,6 +217,7 @@ class _loginScreenState extends State<loginScreen>
                 Container(
                   height: 50.h,
                   margin: const EdgeInsets.only(left: 15, right: 15, top: 24).r,
+                  alignment: Alignment.centerLeft,
                   decoration: BoxDecoration(
                     color: const Color.fromRGBO(243, 243, 243, 1),
                     borderRadius: BorderRadius.all(
@@ -245,59 +240,55 @@ class _loginScreenState extends State<loginScreen>
                   child: TextField(
                     obscureText: _isobscure,
                     controller: _passwordController,
+                    textAlignVertical: TextAlignVertical.center,
                     decoration: InputDecoration(
-                      // labelText: 'Yards',
-                      // floatingLabelStyle: TextStyle(
-                      //   color: Color.fromRGBO(73, 162, 237, 1)
-                      // ),
                       hintText: 'Password',
                       hintStyle: appTextTheme.giloryMedium14lightGrey,
-
+                      isCollapsed: true,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 18.w),
+                      suffixIconConstraints: BoxConstraints(
+                        minHeight: 24.h,
+                        minWidth: 40.w,
+                      ),
                       suffixIcon: Padding(
                         padding: EdgeInsetsDirectional.only(
-                            start: 15.0.r, top: 10.r, end: 15.r, bottom: 10.r),
+                            start: 8.w, end: 14.w),
                         child: InkWell(
                           onTap: () {
                             setState(() {
                               _isobscure = !_isobscure;
                             });
                           },
-                          child: _isobscure
-                              ? Image.asset(
-                                  'assets/images/eyeHide.png',
-                                  color: Colors.black,
-                                  height: 8.h,
-                                  width: 12.w,
-                                )
-                              : Image.asset(
-                                  'assets/images/eyeHide.png',
-                                  color: Colors.black,
-                                  height: 8.h,
-                                  width: 12.w,
-                                ),
+                          child: Image.asset(
+                            'assets/images/eyeHide.png',
+                            color: Colors.black,
+                            height: 8.h,
+                            width: 12.w,
+                          ),
                         ),
                       ),
-
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20).w,
+                        borderRadius: BorderRadius.circular(12).w,
                         borderSide: BorderSide(
                           color: Colors.transparent,
                           width: 1.0.w,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10).w,
+                        borderRadius: BorderRadius.circular(12).w,
                         borderSide: BorderSide(
                           color: const Color.fromRGBO(92, 174, 65, 1),
-                          // color:Color.fromRGBO(73, 162, 237, 1),
+                          width: 1.0.w,
+                        ),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12).w,
+                        borderSide: BorderSide(
+                          color: Colors.transparent,
                           width: 1.0.w,
                         ),
                       ),
                     ),
-
-                    // onChanged: (value) => context.read<LoginBloc>().add(
-                    //   LoginPasswordChanged(password: value)
-                    // ),
                   ),
                 ),
 
@@ -337,8 +328,7 @@ class _loginScreenState extends State<loginScreen>
                   onTap: () {
                     isCalled = false;
                     context.read<LoginCubit>().login(
-                          username:
-                              countryPhoneCode + _phoneNumberController.text,
+                          email: _emailController.text.trim(),
                           password: _passwordController.text,
                         );
                     // Navigator.push(
@@ -385,25 +375,25 @@ class _loginScreenState extends State<loginScreen>
                   ),
                 ),
 
-                Padding(
-                  padding:
-                      const EdgeInsets.only(top: 28, left: 50, right: 50).r,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                          height: 2.h,
-                          width: 67.w,
-                          color: const Color.fromRGBO(181, 181, 181, 1)),
-                      Text('Or continue with',
-                          style: appTextTheme.giloryMedium14lightGrey),
-                      Container(
-                          height: 2.h,
-                          width: 67.w,
-                          color: const Color.fromRGBO(181, 181, 181, 1))
-                    ],
-                  ),
-                ),
+                // Padding(
+                //   padding:
+                //       const EdgeInsets.only(top: 28, left: 50, right: 50).r,
+                //   child: Row(
+                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //     children: [
+                //       Container(
+                //           height: 2.h,
+                //           width: 67.w,
+                //           color: const Color.fromRGBO(181, 181, 181, 1)),
+                //       Text('Or continue with',
+                //           style: appTextTheme.giloryMedium14lightGrey),
+                //       Container(
+                //           height: 2.h,
+                //           width: 67.w,
+                //           color: const Color.fromRGBO(181, 181, 181, 1))
+                //     ],
+                //   ),
+                // ),
 
                 // Padding(
                 //   padding:
@@ -535,7 +525,7 @@ class _loginScreenState extends State<loginScreen>
   }
 
   void shouldClearAllTextFields() {
-    _phoneNumberController.clear();
+    _emailController.clear();
     _passwordController.clear();
   }
 }

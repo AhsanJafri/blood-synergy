@@ -21,62 +21,10 @@ class AuthenticationRepository {
 
   AuthenticationRepository(this._networkClient);
 
-  FormData _cloneFormData(FormData source) {
-    return FormData.fromMap({
-      for (final field in source.fields) field.key: field.value,
-      for (final file in source.files) file.key: file.value,
-    });
-  }
-
-  String? _extractWebAuthToken(dynamic data) {
-    Map<String, dynamic>? json;
-    if (data is Map<String, dynamic>) {
-      json = data;
-    } else if (data is Map) {
-      json = Map<String, dynamic>.from(data);
-    } else if (data is String) {
-      try {
-        final decoded = jsonDecode(data);
-        if (decoded is Map<String, dynamic>) {
-          json = decoded;
-        } else if (decoded is Map) {
-          json = Map<String, dynamic>.from(decoded);
-        }
-      } catch (_) {}
-    }
-    if (json == null || json['success'] != true) return null;
-
-    return json['auth_token']?.toString() ??
-        json['token']?.toString() ??
-        json['webAuthToken']?.toString() ??
-        json['access_token']?.toString();
-  }
-
-  Future<void> _syncWebAuth({
-    required FormData formData,
-    required String mainPath,
-  }) async {
-    try {
-      final response = await _networkClient.dioMainApiRequest(
-        path: mainPath,
-        parameter: _cloneFormData(formData),
-      );
-      print('Web auth response: ${response.data}');
-      final webToken = _extractWebAuthToken(response.data);
-      if (webToken != null && webToken.isNotEmpty) {
-        print("Web Token: $webToken");
-        UserPref.persistWebUserToken(webToken);
-      }
-    } catch (e) {
-      print('Web auth sync failed: $e');
-    }
-  }
-
-  Future<AppResultState<String>> login(
-      String phoneEmail, String password) async {
+  Future<AppResultState<String>> login(String email, String password) async {
     try {
       var data = FormData.fromMap({
-        'phone': phoneEmail,
+        'email': email,
         'password': password,
         'fcm_token': 'sjcn',
         'device_id': 'sdkjcscsdjkcsnd',
@@ -95,18 +43,6 @@ class AuthenticationRepository {
           UserPref.persistUserData(jsonString);
           Constants.token =
               await UserPref.getUserToken() ?? decodedResponse.token ?? '';
-
-          final webFormFields = {
-            for (final field in data.fields) field.key: field.value,
-          };
-          final email = decodedResponse.jsonData?['email']?.toString();
-          if (email != null && email.isNotEmpty) {
-            webFormFields['email'] = email;
-          }
-          await _syncWebAuth(
-            formData: FormData.fromMap(webFormFields),
-            mainPath: NetworkEndPoints.mainLogin,
-          );
 
           return AppResultState.success(decodedResponse.message);
         } else {
@@ -227,13 +163,6 @@ class AuthenticationRepository {
           Constants.token =
               await UserPref.getUserToken() ?? decodedResponse.token ?? '';
 
-          print('DEBUG: Starting web auth sync (non-blocking)...');
-          // Don't await - run in background so it doesn't block signup
-          _syncWebAuth(
-            formData: formData,
-            mainPath: NetworkEndPoints.mainRegister,
-          );
-
           print('DEBUG: Signup successful!');
           return AppResultState.success(decodedResponse.message);
         } else {
@@ -333,11 +262,11 @@ class AuthenticationRepository {
     }
   }
 
-  Future<AppResultState<String>> forgotPassword(String phone) async {
+  Future<AppResultState<String>> forgotPassword(String email) async {
     try {
       final url =
           '${ServerSettings.baseURL}${NetworkEndPoints.forgotPassword}';
-      final requestBody = jsonEncode({'phone': phone});
+      final requestBody = jsonEncode({'email': email});
 
       print('[FORGOT_PASSWORD] API URL: $url');
       print('[FORGOT_PASSWORD] Request body: $requestBody');
@@ -356,19 +285,20 @@ class AuthenticationRepository {
       print('[FORGOT_PASSWORD] Parsed message: ${decodedResponse.message}');
       print('[FORGOT_PASSWORD] Reset token: ${decodedResponse.token}');
 
-      final email = decodedResponse.jsonData?['email']?.toString().trim();
-      print('[FORGOT_PASSWORD] Reset email: $email');
+      final responseEmail =
+          decodedResponse.jsonData?['email']?.toString().trim();
+      print('[FORGOT_PASSWORD] Reset email: $responseEmail');
 
       if (decodedResponse.status == 200 &&
           decodedResponse.token != null &&
           decodedResponse.token!.isNotEmpty &&
-          email != null &&
-          email.isNotEmpty) {
+          responseEmail != null &&
+          responseEmail.isNotEmpty) {
         await PasswordResetStorage.saveSession(
           resetToken: decodedResponse.token!,
-          email: email,
+          email: responseEmail,
         );
-        return AppResultState.successNavigate(email);
+        return AppResultState.successNavigate(responseEmail);
       } else {
         return AppResultState.error(
             decodedResponse.message ?? 'Could not start password reset.');

@@ -26,7 +26,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Future<void> _setAuthCookieAndLoad() async {
-    final token = await UserPref.getWebUserToken();
+    // Prefer customer app token; fall back to legacy web token if present.
+    final token =
+        await UserPref.getUserToken() ?? await UserPref.getWebUserToken();
     print("Token: $token");
     if (token != null && token.isNotEmpty) {
       await CookieManager.instance().setCookie(

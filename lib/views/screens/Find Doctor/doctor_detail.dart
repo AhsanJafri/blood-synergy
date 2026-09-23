@@ -197,13 +197,12 @@ class DoctorDetail extends StatelessWidget {
                       ),
                     },
                   ),
-       
                 ],
               ),
-              SizedBox(height: 10.h,),
-                            if(experience.isNotEmpty)
-
-                _SectionCard(
+            ],
+            if (experience.isNotEmpty) ...[
+              SizedBox(height: 10.h),
+              _SectionCard(
                 title: '',
                 padding: EdgeInsets.fromLTRB(12.w, 15, 12.w, 12.w),
                 children: [
@@ -229,13 +228,18 @@ class DoctorDetail extends StatelessWidget {
                       ),
                     },
                   ),
-       
                 ],
               ),
-              SizedBox(height: 10.h,),
-
-                          _SectionCard(title: "", children:[
-
+            ],
+            if (email.isNotEmpty ||
+                phone.isNotEmpty ||
+                personalSite.isNotEmpty ||
+                city.isNotEmpty ||
+                address.isNotEmpty) ...[
+              SizedBox(height: 10.h),
+              _SectionCard(
+                title: '',
+                children: [
                   if (email.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 10.0),
@@ -280,7 +284,8 @@ class DoctorDetail extends StatelessWidget {
                         label: address,
                       ),
                     ),
-                  ])
+                ],
+              ),
             ],
             SizedBox(height: 24.h),
           ],

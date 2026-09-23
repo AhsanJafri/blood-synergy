@@ -1,8 +1,4 @@
 class NetworkEndPoints {
-  /// Main-base auth (web.blood-synergy.com)
-  static const String mainLogin = 'api/login';
-  static const String mainRegister = 'api/register';
-
   /// Customer End
   static String login = 'customer/login';
   static String register = 'customer/register';

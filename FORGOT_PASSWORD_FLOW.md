@@ -2,7 +2,7 @@
 
 ## Status
 
-The forgot-password flow is implemented in the Flutter application. It allows a customer to enter a registered phone number, receive a six-digit OTP at the email returned by the backend, verify that OTP locally, and set a new password.
+The forgot-password flow is implemented in the Flutter application. It allows a customer to enter their registered email, receive a six-digit OTP at that email, verify that OTP locally, and set a new password.
 
 The API base URL is read from `BASE_URL` in `.env`. The current fallback is:
 
@@ -15,7 +15,7 @@ https://web.blood-synergy.com/api/
 ```text
 Login
   -> Recover Password?
-  -> Enter registered phone number
+  -> Enter registered email
   -> POST customer/forgot
   -> Read email and reset token from the response
   -> Send or resend a 6-digit OTP through SendGrid
@@ -41,7 +41,7 @@ Request:
 
 ```json
 {
-  "phone": "+923001234567"
+  "email": "customer@example.com"
 }
 ```
 
@@ -52,7 +52,7 @@ Expected successful response shape:
   "status": 200,
   "message": "OTP sent successfully",
   "data": {
-    "phone": "+923001234567",
+    "email": "customer@example.com",
     "email": "customer@example.com"
   },
   "token": "backend-reset-token"

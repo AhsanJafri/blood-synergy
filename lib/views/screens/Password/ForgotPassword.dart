@@ -2,7 +2,6 @@ import 'package:blood_synergy_app/Cubits/login_cubit/login_cubit.dart';
 import 'package:blood_synergy_app/helpers/AppNavigator.dart';
 import 'package:blood_synergy_app/helpers/app_result_state.dart';
 import 'package:blood_synergy_app/helpers/apploader.dart';
-import 'package:blood_synergy_app/helpers/countryPickerTextField.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -15,8 +14,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final TextEditingController _phoneCodeController = TextEditingController();
-  var countryPhoneCode = "";
+  final TextEditingController _emailController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +71,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     Navigator.pop(context);
                   },
                   child: Container(
-                    margin: const EdgeInsets.only(left: 15).r,
+                    margin: EdgeInsets.only(left: 20.w, top: 4.h),
                     height: 46.h,
                     width: 46.w,
                     decoration: BoxDecoration(
@@ -88,71 +86,47 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        height: 10.h,
-                      ),
+                      SizedBox(height: 10.h),
                       Text(
                         'Forgot Password',
                         style: appTextTheme.giloryBold28WBlack,
                       ),
-                      SizedBox(
-                        height: 5.h,
-                      ),
+                      SizedBox(height: 8.h),
                       Text(
-                        'In order to reset your password you need to enter your registered phone number.',
+                        'In order to reset your password you need to enter your registered email.',
                         style: appTextTheme.giloryMedium14lightGrey,
                       ),
-                      SizedBox(height: 40.h),
+                      SizedBox(height: 28.h),
                       Container(
                         height: 50.h,
-                        margin:
-                            const EdgeInsets.only(left: 10, right: 10, top: 10)
-                                .r,
-                        decoration: const BoxDecoration(
-                          color: Color.fromRGBO(243, 243, 243, 1),
+                        width: double.infinity,
+                        alignment: Alignment.centerLeft,
+                        decoration: BoxDecoration(
+                          color: const Color.fromRGBO(243, 243, 243, 1),
                           borderRadius: BorderRadius.all(
-                            Radius.circular(18.0),
-                          ),
-                          // boxShadow: [
-                          //   BoxShadow(
-                          //     color: Color(0xffe2e2e2),
-                          //     offset: const Offset(
-                          //       1.0,
-                          //       1.0,
-                          //     ),
-                          //     blurRadius: 10.0,
-                          //     spreadRadius: 2.0,
-                          //   ), //BoxShadow
-
-                          //   //BoxShadow
-                          // ]),
-                        ),
-
-                        child: SizedBox(
-                          height: 57.h,
-                          child: AppCountryInputTextField(
-                            hintLabel: 'Mobile Number',
-                            imageName: '',
-                            shouldObscure: false,
-                            imgWidth: 24,
-                            imgHeight: 24,
-                            myController: _phoneCodeController,
-                            onCountryChanged: (code) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                setState(() {
-                                  countryPhoneCode = code;
-                                });
-                              });
-                            },
+                            Radius.circular(12.r),
                           ),
                         ),
-                        // ),
+                        child: TextField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          autocorrect: false,
+                          textAlignVertical: TextAlignVertical.center,
+                          decoration: InputDecoration(
+                            hintText: 'Email',
+                            hintStyle: appTextTheme.giloryMedium14lightGrey,
+                            border: InputBorder.none,
+                            isCollapsed: true,
+                            contentPadding:
+                                EdgeInsets.symmetric(horizontal: 18.w),
+                          ),
+                        ),
                       ),
-                      SizedBox(height: 20.0.h),
+                      SizedBox(height: 20.h),
                     ],
                   ),
                 ),
@@ -163,41 +137,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         floatingActionButton: InkWell(
           splashColor: Colors.transparent,
           onTap: () {
-            var phone = countryPhoneCode + _phoneCodeController.text;
-            if (_phoneCodeController.text.isEmpty) {
+            final email = _emailController.text.trim();
+            if (email.isEmpty) {
               AppLoader.showSnackbar(
-                  context, 'Phone number can not be empty', false);
+                  context, 'Email cannot be empty', false);
             } else {
-              context.read<LoginCubit>().forgotPassword(phone);
+              context.read<LoginCubit>().forgotPassword(email);
             }
-            // Util.push(context, otpVerificationScreen('SignUp'));
           },
           child: Container(
-            width: 345.w,
+            width: double.infinity,
             height: 50.h,
-
-            margin: const EdgeInsets.only(top: 40, left: 20, right: 20).r,
+            margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
             decoration: BoxDecoration(
               color: const Color.fromRGBO(92, 174, 65, 1),
-              borderRadius: BorderRadius.all(const Radius.circular(18).w),
+              borderRadius: BorderRadius.all(Radius.circular(18.r)),
             ),
-
-            // color: Color.fromRGBO(156, 144, 145, 1),
-
-            // boxShadow: [
-            //   // BoxShadow(
-            //   //   color: Color(0xffe2e2e2),
-            //   //   offset: const Offset(
-            //   //     1.0,
-            //   //     1.0,
-            //   //   ),
-            //   //   // blurRadius: 1.0,
-            //   //   // spreadRadius: 1.0,
-            //   // ), //BoxShadow
-
-            //   //BoxShadow
-            // ]
-
             child: Align(
               alignment: Alignment.center,
               child: Text(
