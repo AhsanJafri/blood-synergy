@@ -1,8 +1,8 @@
-// Smoke test placeholder — full app test requires SharedPreferences and async init.
 import 'package:flutter_test/flutter_test.dart';
 
+/// Lightweight smoke suite kept for `flutter test` default discovery.
 void main() {
-  test('placeholder', () {
-    expect(2 + 2, 4);
+  test('project smoke placeholder still green', () {
+    expect(true, isTrue);
   });
 }

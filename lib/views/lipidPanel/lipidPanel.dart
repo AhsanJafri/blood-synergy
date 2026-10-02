@@ -157,7 +157,7 @@ class LipidPanelScreen extends StatelessWidget {
                     height: 2.h,
                   ),
                   Text(
-                    'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+                    'Review your saved lab reports or add a new panel to track your markers over time.',
                     style: appTextTheme.giloryRegular12lightGrey,
                   ),
                 ],

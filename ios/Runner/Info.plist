@@ -26,6 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Blood Synergy uses the camera so you can take a profile photo or capture lab result images for your records.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Blood Synergy may save images to your photo library when you choose to keep a copy of lab results.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Blood Synergy accesses your photo library so you can choose a profile photo or upload lab result images.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -68,7 +68,7 @@ class RecommendationScreen extends StatelessWidget {
                                       top: 0, bottom: 8.0, right: 8.0, left: 65)
                                   .r,
                               child: Text(
-                                'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+                                'Educational tips based on your wellness patterns. Not medical advice.',
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: appTextTheme.giloryBold22White.copyWith(

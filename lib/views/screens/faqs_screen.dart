@@ -2,21 +2,44 @@ import 'package:blood_synergy_app/helpers/utils.dart';
 import 'package:blood_synergy_app/themes/textTheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class FaqsScreen extends StatefulWidget {
+class FaqsScreen extends StatelessWidget {
   const FaqsScreen();
-  @override
-  State<FaqsScreen> createState() => _FaqsScreenState();
-}
 
-class _FaqsScreenState extends State<FaqsScreen> {
-  late InAppWebViewController webViewController;
-  bool isLoading = true;
-  bool hasError = false;
-  String errorMessage = '';
+  static const _faqs = <Map<String, String>>[
+    {
+      'title': 'What is Blood Synergy?',
+      'description':
+          'Blood Synergy helps you track lab markers and explore educational wellness patterns. It is not a medical diagnosis tool and does not replace care from a licensed clinician.',
+    },
+    {
+      'title': 'Is this medical advice?',
+      'description':
+          'No. Content in the app, including recommendations and the chatbot, is for educational purposes only. Always consult a qualified healthcare professional for medical decisions.',
+    },
+    {
+      'title': 'What data do you collect?',
+      'description':
+          'We collect account details (such as name, email, and phone) and lab values you choose to enter. Optional profile photos or lab images may be uploaded if you select them. See our Privacy Policy for full details.',
+    },
+    {
+      'title': 'How do I delete my account?',
+      'description':
+          'Open Profile, then choose Delete account. This permanently removes your account and associated data from our systems, subject to any legal retention requirements.',
+    },
+    {
+      'title': 'Where is the Privacy Policy?',
+      'description':
+          'Open Profile → Privacy Policy, or visit https://web.blood-synergy.com/privacy-policy.',
+    },
+    {
+      'title': 'Are there in-app purchases?',
+      'description':
+          'No. Blood Synergy does not sell digital goods, subscriptions, or unlockable features through the iOS app.',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +48,14 @@ class _FaqsScreenState extends State<FaqsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Custom Header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0).r,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0)
+                      .r,
               child: Row(
                 children: [
                   InkWell(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
+                    onTap: () => Navigator.pop(context),
                     child: Image.asset(
                       'assets/images/backImgRed.png',
                       height: 46.h,
@@ -45,261 +67,29 @@ class _FaqsScreenState extends State<FaqsScreen> {
                     child: Text(
                       'FAQ\'s',
                       style: appTextTheme.gilorySemiBold16Black.copyWith(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black),
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
-            
-            // WebView Content
             Expanded(
-              child: Stack(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    child: InAppWebView(
-                      initialUrlRequest: URLRequest(
-                        url: WebUri("https://bloodsynergybackend.trangotech.dev/faqs"),
-                      ),
-                      onWebViewCreated: (controller) {
-                        webViewController = controller;
-                      },
-                      initialSettings: InAppWebViewSettings(
-                        javaScriptEnabled: true,
-                        supportZoom: false,
-                        displayZoomControls: false,
-                        builtInZoomControls: false,
-                        allowsInlineMediaPlayback: true,
-                        mediaPlaybackRequiresUserGesture: false,
-                        transparentBackground: true,
-                      ),
-                      onLoadStart: (controller, url) {
-                        setState(() {
-                          isLoading = true;
-                          hasError = false;
-                        });
-                      },
-                      onLoadStop: (controller, url) async {
-                        setState(() {
-                          isLoading = false;
-                        });
-                        
-                        // Inject CSS to hide headers, footers, and other unwanted elements
-                        await controller.evaluateJavascript(source: '''
-                          // Hide common header and footer elements
-                          var style = document.createElement('style');
-                          style.innerHTML = `
-                            header, 
-                            footer, 
-                            nav, 
-                            .header,
-                            .footer,
-                            .navigation,
-                            .nav,
-                            .navbar,
-                            .site-header,
-                            .site-footer,
-                            .page-header,
-                            .page-footer,
-                            .top-bar,
-                            .bottom-bar,
-                            .menu,
-                            .breadcrumb,
-                            .sidebar,
-                            .ads,
-                            .advertisement,
-                            .banner,
-                            .social-media,
-                            .share-buttons,
-                            .related-posts,
-                            .comments,
-                            .comment-section,
-                            [role="navigation"],
-                            [role="banner"],
-                            [role="contentinfo"],
-                            [class*="header"],
-                            [class*="footer"],
-                            [class*="nav"],
-                            [class*="menu"],
-                            [id*="header"],
-                            [id*="footer"],
-                            [id*="nav"],
-                            [id*="menu"] {
-                              display: none !important;
-                              visibility: hidden !important;
-                              height: 0 !important;
-                              margin: 0 !important;
-                              padding: 0 !important;
-                            }
-                            
-                            body {
-                              margin: 0 !important;
-                              padding: 10px !important;
-                              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
-                            }
-                            
-                            main, 
-                            .main, 
-                            .content, 
-                            .post-content,
-                            .entry-content,
-                            .article-content,
-                            [role="main"] {
-                              margin: 0 !important;
-                              padding: 0 !important;
-                              max-width: 100% !important;
-                            }
-                            
-                            h1, h2, h3, h4, h5, h6 {
-                              color: #333 !important;
-                              margin-top: 20px !important;
-                              margin-bottom: 10px !important;
-                            }
-                            
-                            p, li, div {
-                              color: #555 !important;
-                              line-height: 1.6 !important;
-                              margin-bottom: 15px !important;
-                            }
-                            
-                            a {
-                              color: #007bff !important;
-                              text-decoration: none !important;
-                            }
-                            
-                            a:hover {
-                              text-decoration: underline !important;
-                            }
-                          `;
-                          document.head.appendChild(style);
-                          
-                          // Additional cleanup for any remaining unwanted elements
-                          setTimeout(function() {
-                            var unwantedElements = document.querySelectorAll('iframe, script, .ad, .ads, .advertisement, [class*="social"], [class*="share"]');
-                            unwantedElements.forEach(function(element) {
-                              if (element && element.parentNode) {
-                                element.parentNode.removeChild(element);
-                              }
-                            });
-                          }, 1000);
-                        ''');
-                      },
-                      onLoadError: (controller, url, code, message) {
-                        setState(() {
-                          isLoading = false;
-                          hasError = true;
-                          errorMessage = message;
-                        });
-                      },
-                      onLoadHttpError: (controller, url, statusCode, description) {
-                        setState(() {
-                          isLoading = false;
-                          hasError = true;
-                          errorMessage = 'HTTP Error $statusCode: $description';
-                        });
-                      },
-                    ),
-                  ),
-                  
-                  // Loading Indicator
-                  if (isLoading)
-                    Container(
-                      color: Colors.white,
-                      child: const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Color.fromRGBO(207, 27, 33, 1),
-                              ),
-                            ),
-                            SizedBox(height: 16),
-                            Text(
-                              'Loading FAQs...',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  
-                  // Error State
-                  if (hasError && !isLoading)
-                    Container(
-                      color: Colors.white,
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 64,
-                                color: Colors.red[400],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Failed to load FAQs',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[800],
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                errorMessage.isNotEmpty 
-                                    ? errorMessage 
-                                    : 'Please check your internet connection and try again.',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 24),
-                              ElevatedButton.icon(
-                                onPressed: () {
-                                  setState(() {
-                                    isLoading = true;
-                                    hasError = false;
-                                    errorMessage = '';
-                                  });
-                                  webViewController.reload();
-                                },
-                                icon: const Icon(Icons.refresh, color: Colors.white),
-                                label: const Text(
-                                  'Try Again',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color.fromRGBO(207, 27, 33, 1),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+              child: ListView.builder(
+                padding: EdgeInsets.fromLTRB(10.w, 4.h, 10.w, 24.h),
+                itemCount: _faqs.length,
+                itemBuilder: (context, index) {
+                  final faq = _faqs[index];
+                  return CustomExpansionTile(
+                    title: faq['title']!,
+                    description: faq['description']!,
+                    backgroundColor: Colors.grey.shade100,
+                    iconColor: const Color.fromRGBO(191, 30, 46, 1),
+                    textColor: const Color.fromRGBO(50, 50, 50, 1),
+                  );
+                },
               ),
             ),
           ],
@@ -351,18 +141,16 @@ class _CustomExpansionTileState extends State<CustomExpansionTile> {
           ),
           child: Stack(
             children: [
-              // Add the color overlay for collapsed state
-              // if (!_isExpanded)
               Positioned(
                 top: 0,
                 left: 0,
                 right: 0,
-                height: 50, // Set the height of the colored area
+                height: 50,
                 child: Container(
-                  // Set the collapsed color
                   decoration: BoxDecoration(
-                      color: widget.backgroundColor ?? Colors.red,
-                      borderRadius: BorderRadius.circular(10)),
+                    color: widget.backgroundColor ?? Colors.red,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
               ExpansionTile(
@@ -370,7 +158,6 @@ class _CustomExpansionTileState extends State<CustomExpansionTile> {
                     widget.iconColor ?? const Color.fromRGBO(191, 30, 46, 1),
                 collapsedIconColor:
                     widget.iconColor ?? const Color.fromRGBO(191, 30, 46, 1),
-                //minTileHeight: 48,
                 title: Text(
                   widget.title,
                   style: appTextTheme.giloryBold12Black.copyWith(
@@ -385,14 +172,6 @@ class _CustomExpansionTileState extends State<CustomExpansionTile> {
                     title: widget.isHTML == true
                         ? Html(
                             data: widget.description,
-                            // style: {
-                            //   "body": Style(
-                            //     color: Colors.black, // Change text color here
-                            //   ),
-                            //   "a": Style(
-                            //     color: Colors.black, // Change link color here
-                            //   ),
-                            // },
                             onAnchorTap: (url, attributes, element) async {
                               if (url?.isEmpty == true) {
                                 Util.showToast(
@@ -430,11 +209,6 @@ class _CustomExpansionTileState extends State<CustomExpansionTile> {
                   ),
                   const SizedBox(height: 16),
                 ],
-                onExpansionChanged: (bool expanded) {
-                  setState(() {
-                    // Handle expansion state if needed
-                  });
-                },
               ),
             ],
           ),

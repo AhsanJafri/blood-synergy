@@ -157,8 +157,7 @@ class _LipidTestReportScreenState extends State<LipidTestReportScreen> {
                             height: 5.h,
                           ),
                           Text(
-                            'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-                            //  'Please enter 6-digit code we have sent you on your phone ${barnoliAppStateManager.showNum}',
+                            'Your entered lab markers for this report. Values are for educational pattern tracking only.',
                             style: appTextTheme.giloryRegular14lightGrey,
 
                             textAlign: TextAlign.start,
