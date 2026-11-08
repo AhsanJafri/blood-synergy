@@ -1,23 +1,20 @@
 # Secrets / environment
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
-# macOS
-.DS_Store
-**/.DS_Store
-.AppleDouble
-.LSOverride
-._*
-
-# Flutter / Dart
+# Dependency / generated caches (like node_modules)
+node_modules/
 .dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
 .packages
 .pub-cache/
 .pub/
+.flutter-plugins
+# Keep .flutter-plugins-dependencies tracked when present in repo
+
+# Build outputs
 build/
+**/build/
 coverage/
 *.dart.js
 *.info.json
@@ -29,19 +26,30 @@ coverage/
 *.dill.track.dill
 *.cache.dill
 *.track.dill
+*.aab
+*.apk
+*.ipa
+*.app.dSYM.zip
+*.app.dSYM
+
+# macOS
+.DS_Store
+**/.DS_Store
+.AppleDouble
+.LSOverride
+._*
 
 # Android
 **/android/**/gradle-wrapper.jar
-**/android/.gradle
+**/android/.gradle/
 **/android/captures/
-**/android/gradlew
-**/android/gradlew.bat
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
 **/android/.cxx/
 **/android/key.properties
 **/*.keystore
 **/*.jks
+**/*.pem
 
 # iOS / Xcode
 **/ios/**/dgph
@@ -52,7 +60,6 @@ coverage/
 **/ios/**/*.perspectivev3
 **/ios/**/*sync/
 **/ios/.sconsign.dblite
-**/ios/.tags*
 **/ios/**/.vagrant/
 **/ios/**/DerivedData/
 **/ios/Icon?
@@ -88,3 +95,5 @@ coverage/
 *.swp
 *.swo
 *~
+.temp/
+.tmp/
