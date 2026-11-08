@@ -11,7 +11,8 @@ plugins {
 android {
     namespace = "com.app.blood_synergy"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Pin to an installed NDK; Flutter's default 28.x download was incomplete.
+    ndkVersion = "27.1.12297006"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -52,6 +53,10 @@ android {
         getByName("release") {
             // Use the release signing config defined above
             signingConfig = signingConfigs.getByName("release")
+            // SYMBOL_TABLE lets AGP strip/produce .sym for Play without full debug info.
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
         }
     }
 }

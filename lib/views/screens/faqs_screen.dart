@@ -22,7 +22,12 @@ class FaqsScreen extends StatelessWidget {
     {
       'title': 'What data do you collect?',
       'description':
-          'We collect account details (such as name, email, and phone) and lab values you choose to enter. Optional profile photos or lab images may be uploaded if you select them. See our Privacy Policy for full details.',
+          'We collect account details (such as name, email, and phone) and lab values you choose to enter. Optional profile photos or lab images may be uploaded if you select them. Sex/gender may be used because laboratory reference ranges can differ by sex. If you use the chatbot, you first consent to sharing messages, lab inputs/images, and related session data with Blood Synergy\'s service, which uses Google\'s Gemini API. Identifying details are removed before AI processing. See our Privacy Policy for full details.',
+    },
+    {
+      'title': 'Where are medical Sources & Citations?',
+      'description':
+          'Open Profile → Sources & Citations. Citations also appear on Recommendations and after Pattern Results on a report. Chatbot → Sources opens the same references. Content is educational only, not medical advice.',
     },
     {
       'title': 'How do I delete my account?',

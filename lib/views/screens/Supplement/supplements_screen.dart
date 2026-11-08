@@ -1,21 +1,16 @@
-import 'package:blood_synergy_app/Cubits/DashboardCubit/dashboard_cubit.dart';
 import 'package:blood_synergy_app/Cubits/doctors_cubit/doctors_cubit.dart';
 import 'package:blood_synergy_app/Cubits/supplements_cubit/supplements_cubit.dart';
 import 'package:blood_synergy_app/Repositories/HomeRepository.dart';
-import 'package:blood_synergy_app/helpers/AppNavigator.dart';
-import 'package:blood_synergy_app/helpers/GeneralStates.dart';
 import 'package:blood_synergy_app/helpers/app_result_state.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import '../../../Models/SupplementsModel.dart';
-import '../../../helpers/AppNetworkImage.dart';
+import '../../../helpers/GeneralStates.dart';
 import '../../../themes/textTheme.dart';
 import '../../../network_helpers/network.dart';
+import 'package:blood_synergy_app/widgets/app_tab_header.dart';
 import 'package:http/http.dart';
 
 class SupplementsScreen extends StatelessWidget {
@@ -26,131 +21,16 @@ class SupplementsScreen extends StatelessWidget {
           DoctorsCubit(HomeRepository(NetworkClient(Client(), dio: Dio()))),
       child: Scaffold(
         resizeToAvoidBottomInset: true,
-        backgroundColor: const Color.fromRGBO(255, 255, 255, 1),
+        backgroundColor: const Color(0xFFF7F7F8),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            headerWidget(context),
-            Expanded(child: _gridView(context)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Container headerWidget(BuildContext context) {
-    var user = context.read<DashboardCubit>().user;
-    return Container(
-      height: 125.h,
-      width: 375.w,
-      decoration: const BoxDecoration(
-        borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
-        color: Color.fromRGBO(207, 27, 33, 1),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(left: 24, right: 24, top: 40).r,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 10, top: 10).r,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(
-                                  top: 0, bottom: 8.0, right: 8.0)
-                              .r,
-                          child: Text(
-                            'Explore Wellness Patterns',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: appTextTheme.giloryBold22White
-                                .copyWith(height: 1.1),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                                  top: 0, bottom: 8.0, right: 8.0)
-                              .r,
-                          child: Text(
-                            'Explore educational resources, videos and wellness options to support your journey. Always consult a doctor for personalized advice',
-                            maxLines: 4,
-                            overflow: TextOverflow.ellipsis,
-                            style: appTextTheme.giloryBold22White.copyWith(
-                                height: 1.1,
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.normal),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            const AppTabHeader(
+              title: 'Wellness',
+              subtitle:
+                  'Educational resources, videos, and wellness options. Always consult a doctor for personalized advice.',
             ),
-            // Padding(
-            //   padding: EdgeInsets.only(
-            //     bottom: 12.h,
-            //   ),
-            //   child: Container(
-            //     decoration: BoxDecoration(
-            //       color: const Color.fromRGBO(243, 243, 243, 1),
-            //       borderRadius: BorderRadius.all(
-            //         const Radius.circular(12.0).w,
-            //       ),
-            //     ),
-            //     height: 42.h,
-            //     child: TextField(
-            //       //  controller: _passwordController,
-            //       // textAlign: TextAlign.center,
-            //       inputFormatters: [LengthLimitingTextInputFormatter(40)],
-            //       maxLines: 1,
-            //       textAlignVertical: TextAlignVertical.center,
-            //       decoration: InputDecoration(
-            //         hintText: 'Search your Report',
-            //         isDense: true,
-
-            //         //    filled: true,
-            //         //  fillColor: Colors.white,
-            //         hintStyle: appTextTheme.giloryMedium14lightGrey,
-            //         prefixIcon: Padding(
-            //           padding: EdgeInsetsDirectional.only(
-            //               start: 15.0.r, top: 10.r, end: 15.r, bottom: 10.r),
-            //           child: Image.asset(
-            //             'assets/images/searchImg.png',
-            //             height: 16.h,
-            //             width: 16.w,
-            //           ),
-            //         ),
-            //         enabledBorder: OutlineInputBorder(
-            //           borderRadius: BorderRadius.circular(20).w,
-            //           borderSide: BorderSide(
-            //             color: Colors.transparent,
-            //             width: 1.0.w,
-            //           ),
-            //         ),
-            //         focusedBorder: OutlineInputBorder(
-            //           borderRadius: BorderRadius.circular(10).w,
-            //           borderSide: BorderSide(
-            //             color: Colors.transparent,
-            //             // color:Color.fromRGBO(73, 162, 237, 1),
-            //             width: 1.0.w,
-            //           ),
-            //         ),
-            //       ),
-
-            //       // onChanged: (value) => context.read<LoginBloc>().add(
-            //       //   LoginPasswordChanged(password: value)
-            //       // ),
-            //     ),
-            //   ),
-            // ),
+            Expanded(child: _gridView(context)),
           ],
         ),
       ),
@@ -169,136 +49,242 @@ class SupplementsScreen extends StatelessWidget {
         } else if (state.status.isSuccess) {
           var supplements = context.read<SupplementsCubit>().supplements;
 
-          return GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            padding:
-                const EdgeInsets.only(top: 15, left: 10, right: 10, bottom: 8)
-                    .r,
-            crossAxisSpacing: 15.w,
-            mainAxisSpacing: 15.w,
-            childAspectRatio: 9.w / 7.w,
-            children: List.generate((supplements.length), (index) {
-              if (supplements.isEmpty) {
-                return const Center(
-                  child: Text('No Supplements Found!'),
-                );
-              }
-              var item = supplements[index];
-              return InkWell(
-                onTap: () {},
+          if (supplements.isEmpty) {
+            return const Center(child: Text('No Wellness Patterns Found!'));
+          }
+
+          return GridView.builder(
+            padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 16.h),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12.w,
+              mainAxisSpacing: 12.h,
+              childAspectRatio: 0.88,
+            ),
+            itemCount: supplements.length,
+            itemBuilder: (context, index) {
+              final item = supplements[index];
+              final accent = hexToRgba(item.color, 1);
+              // Do not open external video/store purchase links (App Review 3.1.1).
+              const footerLabel = 'Educational pattern overview';
+
+              return Material(
+                color: Colors.white,
+                elevation: 0,
+                borderRadius: BorderRadius.circular(18.r),
                 child: Container(
-                  clipBehavior: Clip.hardEdge,
                   decoration: BoxDecoration(
-                    color: const Color.fromRGBO(243, 243, 243, 1),
-                    borderRadius: BorderRadius.all(const Radius.circular(22).w),
+                    borderRadius: BorderRadius.circular(18.r),
+                    border: Border.all(color: const Color(0xFFE8E8EA)),
                   ),
+                  clipBehavior: Clip.antiAlias,
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Container(
-                        height: MediaQuery.of(context).size.width / 7,
-                        width: double.infinity,
-                        padding: EdgeInsets.zero,
-                        decoration: BoxDecoration(
-                          color: hexToRgba(item.color, 1),
-                          // borderRadius:
-                          //     BorderRadius.all(const Radius.circular(30).w),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            item.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: appTextTheme.giloryBold22White
-                                .copyWith(height: 1.1),
+                      Expanded(
+                        flex: 55,
+                        child: Container(
+                          color: accent,
+                          padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 10.h),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Align(
+                                alignment: Alignment.topRight,
+                                child: Container(
+                                  width: 40.w,
+                                  height: 40.w,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.22),
+                                    borderRadius: BorderRadius.circular(12.r),
+                                  ),
+                                  child: Icon(
+                                    _iconForTitle(item.title, index),
+                                    color: Colors.white,
+                                    size: 22.sp,
+                                  ),
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                item.title,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: appTextTheme.giloryBold22White.copyWith(
+                                  fontSize: 14.sp,
+                                  height: 1.2,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        // child: AppNetworkImage(
-                        //   path: item.color,
-                        // ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                                top: 5, left: 5, right: 5, bottom: 0)
-                            .r,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: item.links.map((link) {
-                            return GestureDetector(
-                              onTap: () async {
-                                if (!await launchUrl(
-                                    Uri.parse(item.links.first.link))) {
-                                  throw Exception(
-                                      'Could not launch ${item.links.first.link}');
-                                }
-                                // Handle link tap event
-                              },
-                              child: Text(
-                                '${item.links.first.title}',
-                                // 'SupplementLink.com',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: appTextTheme.giloryMedium9White
-                                    .copyWith(color: Colors.blue, fontSize: 12),
+                      Expanded(
+                        flex: 40,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 10.w, vertical: 8.h),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 28.w,
+                                height: 28.w,
+                                decoration: BoxDecoration(
+                                  color: accent.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(8.r),
+                                ),
+                                child: Icon(
+                                  Icons.menu_book_rounded,
+                                  size: 16.sp,
+                                  color: accent,
+                                ),
                               ),
-                            );
-                          }).toList(),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Text(
+                                  footerLabel,
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  softWrap: true,
+                                  style:
+                                      appTextTheme.giloryMedium9White
+                                        .copyWith(
+                                    color: const Color(0xFF1A1A1A),
+                                    fontSize: 11.sp,
+                                    height: 1.2,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
               );
-            }),
+            },
           );
         }
         return const Center(
-            child: SizedBox(
-                height: 20, width: 20, child: CircularProgressIndicator()));
-      },
-    );
-  }
-
-  Widget detailBtn(BuildContext context, Function()? onTap) {
-    return InkWell(
-      splashColor: Colors.transparent,
-      onTap: onTap,
-      child: Container(
-        // width: 345.w,
-        height: 25.h,
-        margin: const EdgeInsets.only(top: 5, left: 0, right: 0, bottom: 8).r,
-        decoration: BoxDecoration(
-          color: const Color.fromRGBO(207, 27, 33, 1),
-          borderRadius: BorderRadius.all(const Radius.circular(18).w),
-        ),
-        child: Align(
-          alignment: Alignment.center,
-          child: Text(
-            'View Details',
-            style: appTextTheme.gilorySemiBold16White.copyWith(fontSize: 12),
+          child: SizedBox(
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator(),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
+/// Maps wellness category titles to icons. Extra keyword coverage + index
+/// fallback so new categories still get a distinct icon.
+IconData _iconForTitle(String title, int index) {
+  final t = title.toLowerCase();
+  if (t.contains('energy') || t.contains('vitality') || t.contains('fatigue')) {
+    return Icons.bolt_rounded;
+  }
+  if (t.contains('digest') || t.contains('gut') || t.contains('stomach')) {
+    return Icons.restaurant_rounded;
+  }
+  if (t.contains('cellular repair') ||
+      t.contains('repair') ||
+      t.contains('recover')) {
+    return Icons.healing_rounded;
+  }
+  if (t.contains('metabolic') ||
+      t.contains('metabolism') ||
+      t.contains('weight')) {
+    return Icons.local_fire_department_rounded;
+  }
+  if (t.contains('endocrine') || t.contains('hormone')) {
+    return Icons.science_rounded;
+  }
+  if (t.contains('cognitive') ||
+      t.contains('brain') ||
+      t.contains('memory') ||
+      t.contains('focus')) {
+    return Icons.psychology_rounded;
+  }
+  if (t.contains('immune') || t.contains('immunity') || t.contains('virus')) {
+    return Icons.shield_rounded;
+  }
+  if (t.contains('cellular development') ||
+      t.contains('growth') ||
+      t.contains('development')) {
+    return Icons.spa_rounded;
+  }
+  if (t.contains('inflamm') || t.contains('joint') || t.contains('pain')) {
+    return Icons.water_drop_rounded;
+  }
+  if (t.contains('blood sugar') ||
+      t.contains('glucose') ||
+      t.contains('sugar') ||
+      t.contains('diabetes')) {
+    return Icons.monitor_heart_rounded;
+  }
+  if (t.contains('hashimoto')) return Icons.biotech_rounded;
+  if (t.contains('hypothyroid') || t.contains('thyroid')) {
+    return Icons.favorite_rounded;
+  }
+  if (t.contains('anemia') || t.contains('iron') || t.contains('folate')) {
+    return Icons.bloodtype_rounded;
+  }
+  if (t.contains('hepatic') || t.contains('liver') || t.contains('detox')) {
+    return Icons.eco_rounded;
+  }
+  if (t.contains('heart') || t.contains('cardio') || t.contains('lipid')) {
+    return Icons.favorite_border_rounded;
+  }
+  if (t.contains('sleep') || t.contains('rest')) return Icons.bedtime_rounded;
+  if (t.contains('stress') || t.contains('anxiety') || t.contains('mood')) {
+    return Icons.self_improvement_rounded;
+  }
+  if (t.contains('bone') || t.contains('calcium') || t.contains('mineral')) {
+    return Icons.accessibility_new_rounded;
+  }
+  if (t.contains('skin') || t.contains('hair') || t.contains('beauty')) {
+    return Icons.face_retouching_natural_rounded;
+  }
+  if (t.contains('kidney') || t.contains('renal')) return Icons.opacity_rounded;
+  if (t.contains('vitamin') ||
+      t.contains('nutrient') ||
+      t.contains('supplement')) {
+    return Icons.medication_rounded;
+  }
+  if (t.contains('fitness') || t.contains('exercise') || t.contains('muscle')) {
+    return Icons.fitness_center_rounded;
+  }
+  if (t.contains('hydration') || t.contains('water')) {
+    return Icons.water_rounded;
+  }
+  if (t.contains('inflam')) return Icons.whatshot_rounded;
+
+  // Stable fallbacks for future / unknown categories
+  const fallbacks = <IconData>[
+    Icons.health_and_safety_rounded,
+    Icons.volunteer_activism_rounded,
+    Icons.medical_services_rounded,
+    Icons.monitor_heart_outlined,
+    Icons.bubble_chart_rounded,
+    Icons.insights_rounded,
+    Icons.auto_awesome_rounded,
+    Icons.nightlife_rounded,
+    Icons.grass_rounded,
+    Icons.air_rounded,
+  ];
+  return fallbacks[index % fallbacks.length];
+}
+
 Color hexToRgba(String hex, double opacity) {
-  // Remove the leading # if it's there
   hex = hex.replaceAll("#", "");
-
-  // Convert the hex to an integer and parse it as RGB values
   int hexColor = int.parse(hex, radix: 16);
-
-  // Calculate the red, green, blue values
   int red = (hexColor >> 16) & 0xFF;
   int green = (hexColor >> 8) & 0xFF;
   int blue = hexColor & 0xFF;
-
-  // Create the color with the specified opacity
   return Color.fromRGBO(red, green, blue, opacity);
 }

@@ -14,6 +14,7 @@ import '../../../Repositories/HomeRepository.dart';
 import '../../../network_helpers/network.dart';
 import 'package:http/http.dart';
 import 'package:blood_synergy_app/views/screens/Find%20Doctor/doctor_detail.dart';
+import 'package:blood_synergy_app/widgets/app_tab_header.dart';
 
 class FindDoctorScreen extends StatefulWidget {
   @override
@@ -55,125 +56,46 @@ class _FindDoctorScreenState extends State<FindDoctorScreen> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            headerWidget(context),
-            Expanded(child: _gridView(context)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Container headerWidget(BuildContext context) {
-    return Container(
-      height: 195.h,
-      width: 375.w,
-      decoration: const BoxDecoration(
-        borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
-        color: Color.fromRGBO(207, 27, 33, 1),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(left: 24, right: 24, top: 40).r,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 10, top: 10).r,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(
-                                  top: 0, bottom: 8.0, right: 8.0)
-                              .r,
-                          child: Text(
-                            'Practitioners',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: appTextTheme.giloryBold22White
-                                .copyWith(height: 1.1),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                                  top: 0, bottom: 8.0, right: 8.0)
-                              .r,
-                          child: Text(
-                            'Connect with listed practitioners for personalized 1-on-1 consultations. Keep in mind, the scope of practice in each state varies and practitioners practice within the states they are licensed.',
-                            maxLines: 5,
-                            overflow: TextOverflow.ellipsis,
-                            style: appTextTheme.giloryBold22White.copyWith(
-                                height: 1.1,
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.normal),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: EdgeInsets.only(
-                bottom: 12.h,
-              ),
-              child: Container(
+            AppTabHeader(
+              title: 'Practitioners',
+              subtitle:
+                  'Connect for educational 1-on-1 consultations. Practitioners practice only where they are licensed.',
+              bottom: Container(
+                height: 36.h,
                 decoration: BoxDecoration(
-                  color: const Color.fromRGBO(243, 243, 243, 1),
-                  borderRadius: BorderRadius.all(
-                    const Radius.circular(12.0).w,
-                  ),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
-                height: 42.h,
                 child: TextField(
                   controller: _searchController,
-                  // textAlign: TextAlign.center,
                   inputFormatters: [LengthLimitingTextInputFormatter(40)],
                   maxLines: 1,
                   textAlignVertical: TextAlignVertical.center,
+                  style: appTextTheme.giloryMedium14BlackTheme
+                      .copyWith(fontSize: 13.sp),
                   decoration: InputDecoration(
-                    hintText: 'Search Practitioners',
+                    hintText: 'Search practitioners',
                     isDense: true,
-
-                    //    filled: true,
-                    //  fillColor: Colors.white,
-                    hintStyle: appTextTheme.giloryMedium14lightGrey,
+                    hintStyle: appTextTheme.giloryMedium14lightGrey
+                        .copyWith(fontSize: 13.sp),
+                    border: InputBorder.none,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.h),
                     prefixIcon: Padding(
-                      padding: EdgeInsetsDirectional.only(
-                          start: 15.0.r, top: 5.r, end: 15.r, bottom: 5.r),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                       child: Image.asset(
                         'assets/images/searchImg.png',
-                        height: 16.h,
-                        width: 16.w,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20).w,
-                      borderSide: BorderSide(
-                        color: Colors.transparent,
-                        width: 1.0.w,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10).w,
-                      borderSide: BorderSide(
-                        color: Colors.transparent,
-                        // color:Color.fromRGBO(73, 162, 237, 1),
-                        width: 1.0.w,
+                        height: 14.h,
+                        width: 14.w,
                       ),
                     ),
                   ),
-                  onChanged: (value) {
-                    _filterDoctors(value);
-                  },
+                  onChanged: _filterDoctors,
                 ),
               ),
             ),
+            Expanded(child: _gridView(context)),
           ],
         ),
       ),

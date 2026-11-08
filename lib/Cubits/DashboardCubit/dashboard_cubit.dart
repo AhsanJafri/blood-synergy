@@ -16,12 +16,9 @@ class DashboardCubit extends Cubit<DashboardState> {
     var screen = TabScreens.Home;
     switch (selectedTab) {
       case 1:
-        screen = TabScreens.Wellness;
-        break;
-      case 2:
         screen = TabScreens.findDoctor;
         break;
-      case 3:
+      case 2:
         screen = TabScreens.Profile;
         break;
       default:

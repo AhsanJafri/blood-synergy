@@ -10,6 +10,7 @@ import 'package:blood_synergy_app/themes/textTheme.dart';
 import 'package:blood_synergy_app/views/Widgets/ExpansionTiles.dart';
 import 'package:blood_synergy_app/views/screens/statistics/statistic.dart';
 import 'package:blood_synergy_app/views/screens/widgets/MsgWidget.dart';
+import 'package:blood_synergy_app/widgets/medical_citations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -235,7 +236,7 @@ class _LipidTestReportScreenState extends State<LipidTestReportScreen> {
                             style: appTextTheme.giloryBold18Black,
                           ),
                           Text(
-                            'Here are your results based on our analysis',
+                            'Educational pattern results only — not a diagnosis or medical advice.',
                             style: appTextTheme.giloryRegular12lightGrey,
                           ),
                         ],
@@ -259,6 +260,7 @@ class _LipidTestReportScreenState extends State<LipidTestReportScreen> {
                       ),
                     ),
                     jobListing(),
+                    const MedicalCitations(),
                     InkWell(
                         onTap: () {
                           Navigator.pop(context);
@@ -268,7 +270,7 @@ class _LipidTestReportScreenState extends State<LipidTestReportScreen> {
                           width: 345.w,
                           height: 50.h,
                           margin: const EdgeInsets.only(
-                                  top: 30, left: 10, right: 10, bottom: 20)
+                                  top: 16, left: 10, right: 10, bottom: 20)
                               .r,
                           decoration: BoxDecoration(
                             color: const Color.fromRGBO(92, 174, 65, 1),

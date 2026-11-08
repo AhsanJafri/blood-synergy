@@ -3,6 +3,7 @@ import 'package:blood_synergy_app/helpers/utils.dart';
 import 'package:blood_synergy_app/themes/textTheme.dart';
 import 'package:blood_synergy_app/views/screens/Supplement/supplements_screen.dart';
 import 'package:blood_synergy_app/views/screens/faqs_screen.dart';
+import 'package:blood_synergy_app/widgets/medical_citations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -90,8 +91,12 @@ class RecommendationScreen extends StatelessWidget {
           Expanded(
             child: ListView.builder(
               padding: EdgeInsets.zero,
-              itemCount: (model?.isEmpty == false ? model?.length : 1),
+              itemCount: (model?.isEmpty == false ? (model!.length + 1) : 2),
               itemBuilder: (context, index) {
+                final itemCount = model?.isEmpty == false ? model!.length : 0;
+                if (index == itemCount) {
+                  return const MedicalCitations();
+                }
                 return (model?.isEmpty ?? true)
                     ? const Center(
                         child: Padding(
@@ -116,7 +121,7 @@ class RecommendationScreen extends StatelessWidget {
             ),
           ),
 
-          SizedBox(height: 30.h),
+          SizedBox(height: 16.h),
         ],
       ),
     );

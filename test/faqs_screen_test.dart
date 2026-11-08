@@ -21,6 +21,7 @@ void main() {
     expect(find.text('What data do you collect?'), findsOneWidget);
     expect(find.text('How do I delete my account?'), findsOneWidget);
     expect(find.text('Where is the Privacy Policy?'), findsOneWidget);
+    expect(find.text('Where are medical Sources & Citations?'), findsOneWidget);
     expect(find.text('Are there in-app purchases?'), findsOneWidget);
 
     await tester.tap(find.text('Are there in-app purchases?'));

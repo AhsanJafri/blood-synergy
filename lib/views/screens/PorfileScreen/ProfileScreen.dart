@@ -8,11 +8,13 @@ import 'package:blood_synergy_app/helpers/AppPreference.dart';
 import 'package:blood_synergy_app/Models/UserModel.dart';
 import 'package:blood_synergy_app/network_helpers/network.dart';
 import 'package:blood_synergy_app/themes/textTheme.dart';
+import 'package:blood_synergy_app/views/screens/sources_citations_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' show Client;
 import 'dart:convert';
 
@@ -35,6 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     MenuItem(title: 'Edit Profile', tag: 1),
     MenuItem(title: 'Push Notification', tag: 2),
     MenuItem(title: 'Frequently Asked Questions', tag: 3),
+    MenuItem(title: 'Sources & Citations', tag: 8),
     MenuItem(title: 'Change Password', tag: 4),
     MenuItem(title: 'Terms and Conditions', tag: 5),
     MenuItem(title: 'Privacy Policy', tag: 6),
@@ -85,7 +88,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         print('Action for: ${item.title}');
         _showDeleteAccountConfirmation();
         break;
-      // Add more cases as needed
+      case 8:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SourcesCitationsScreen()),
+        );
+        break;
       default:
         print('Unknown action for: ${item.title}');
     }
@@ -232,54 +240,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     var user = context.read<DashboardCubit>().user;
 
     return Scaffold(
-      // appBar: AppBar(
-      //   title: const Text('Profile'),
-      //   centerTitle: true,
-      // ),
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
           child: Column(
             children: <Widget>[
-              const SizedBox(
-                height: 50,
-              ),
-              // Profile Image, Name, and Email
-              Center(
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      child: (user.image == null ||
-                              (user.image?.isEmpty == true))
-                          ? Image.asset('assets/images/profilePlaceHolder.jpg')
-                          : AppNetworkImage(
-                              path: user.image,
-                              isCircular: true,
-                            ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      '${(user.firstName ?? 'John') + " " + (user.lastName ?? 'Doe')}',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+              CircleAvatar(
+                radius: 44.r,
+                child: (user.image == null || (user.image?.isEmpty == true))
+                    ? Image.asset('assets/images/profilePlaceHolder.jpg')
+                    : AppNetworkImage(
+                        path: user.image,
+                        isCircular: true,
                       ),
-                    ),
-                    Text(
-                      user.email ?? 'john.doe@example.com',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
               ),
-              // const SizedBox(height: 10),
-
-              // List of items
+              SizedBox(height: 10.h),
+              Text(
+                '${(user.firstName ?? 'John') + " " + (user.lastName ?? 'Doe')}',
+                style: appTextTheme.giloryBold16Black.copyWith(fontSize: 20.sp),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                user.email ?? 'john.doe@example.com',
+                style: appTextTheme.giloryRegular12lightGrey
+                    .copyWith(fontSize: 14.sp),
+              ),
+              SizedBox(height: 16.h),
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),

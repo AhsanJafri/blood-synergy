@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:blood_synergy_app/Models/UserModel.dart';
 import 'package:blood_synergy_app/helpers/AppStateManager.dart';
 import 'package:blood_synergy_app/helpers/Constants.dart';
+import 'package:blood_synergy_app/helpers/ai_consent.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserPref {
@@ -57,6 +58,7 @@ class UserPref {
     prefs.remove("user");
     prefs.remove("authToken");
     prefs.remove("webAuthToken");
+    await AiConsent.clear();
   }
 
   static Future<CurrentUser> retrieveUserDate() async {
